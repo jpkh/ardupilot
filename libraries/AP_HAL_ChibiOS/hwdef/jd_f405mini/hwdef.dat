@@ -1,5 +1,12 @@
-# hw definition file for processing by chibios_pins.py
-# for jd_f4mini hardware
+#####################################################################
+#
+# HW definitions file for jD-F405Mini board 
+#
+#####################################################################
+#
+# Version     : 14/06/2019
+#
+#####################################################################
 
 
 #########################################################
@@ -63,6 +70,7 @@ PA6 SPI1_MISO SPI1
 PA7 SPI1_MOSI SPI1
 
 PC3 MS5611_CS CS
+#PA4 MS5611_CS CS
 PC4 MPU_CS CS
 PC5 EXTI_MPU9250 INPUT PULLUP
 
@@ -174,7 +182,7 @@ FLASH_RESERVE_START_KB 64
 
 ###############################
 # Board definition
-define CONFIG_HAL_BOARD_SUBTYPE HAL_BOARD_SUBTYPE_CHIBIOS_JDF4MINI
+##define CONFIG_HAL_BOARD_SUBTYPE HAL_BOARD_SUBTYPE_CHIBIOS_JDF4MINI
 define STM32_PWM_USE_ADVANCED TRUE
 define BOARD_PWM_COUNT_DEFAULT 7
 
@@ -210,15 +218,21 @@ define HAL_BARO_DEFAULT HAL_BARO_MS5611_SPI
 # IMU and it's rotation
 
 define HAL_INS_DEFAULT HAL_INS_MPU9250_SPI
-define HAL_INS_DEFAULT_ROTATION ROTATION_YAW_180
+#define HAL_INS_DEFAULT_ROTATION ROTATION_YAW_180
+define HAL_INS_DEFAULT_ROTATION ROTATION_YAW_90
 
 ################################
 # Magnetometer
-define HAL_COMPASS_DEFAULT HAL_COMPASS_AK8963_MPU9250
+define ALLOW_ARM_NO_COMPASS
+define HAL_COMPASS_DEFAULT HAL_COMPASS_NONE
+
+#define HAL_COMPASS_DEFAULT HAL_COMPASS_AK8963_MPU9250
+#define HAL_COMPASS_DEFAULT HAL_COMPASS_QMC5883
+#define HAL_COMPASS_DEFAULT HAL_COMPASS_HMC5983
 #define HAL_COMPASS_DEFAULT HAL_COMPASS_NONE
-define HAL_PROBE_EXTERNAL_I2C_COMPASSES
-define HAL_I2C_INTERNAL_MASK 0
-define HAL_COMPASS_AUTO_ROT_DEFAULT 2
+#define HAL_PROBE_EXTERNAL_I2C_COMPASSES
+#define HAL_I2C_INTERNAL_MASK 0
+#define HAL_COMPASS_AUTO_ROT_DEFAULT 2
 
 
 ###############################
