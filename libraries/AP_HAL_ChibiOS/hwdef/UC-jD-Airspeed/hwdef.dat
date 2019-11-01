@@ -1,0 +1,28 @@
+#######################################################
+#
+# UAVCAN jDrones Airspeed module
+#
+# Author	: Jani Hirvinen, <jani@jdrones.com>
+# Version	: v1.0, 30/10/2019
+#
+#######################################################
+
+#############
+# Include main F103 Peripherial definitions
+include ../f103-periph/hwdef.dat
+
+#############
+# UAVCAN name
+define CAN_APP_NODE_NAME "org.jdrones.airspeed"
+
+
+#############
+# default NODE id
+define HAL_CAN_DEFAULT_NODE_ID 0
+
+define HAL_AIRSPEED_BUS_DEFAULT 0
+define AIRSPEED_MAX_SENSORS 1
+
+
+define HAL_PERIPH_ENABLE_AIRSPEED
+# define HAL_PERIPH_ENABLE_MAG
