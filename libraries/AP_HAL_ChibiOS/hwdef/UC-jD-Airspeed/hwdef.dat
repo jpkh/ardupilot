@@ -13,12 +13,12 @@ include ../f103-periph/hwdef.dat
 
 #############
 # UAVCAN name
-define CAN_APP_NODE_NAME "org.jdrones.airspeed"
+define CAN_APP_NODE_NAME "org.jdrones.ap_periph_airspeed"
 
 
 #############
 # default NODE id
-define HAL_CAN_DEFAULT_NODE_ID 0
+define HAL_CAN_DEFAULT_NODE_ID 112
 
 define HAL_AIRSPEED_BUS_DEFAULT 0
 define AIRSPEED_MAX_SENSORS 1
