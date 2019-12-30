@@ -200,7 +200,7 @@ bool SPIDevice::do_transfer(const uint8_t *send, uint8_t *recv, uint32_t len)
     // expect this timeout to trigger unless there is a severe MCU
     // error
     const uint32_t timeout_us = 20000U + len * 32U;
-    msg_t msg = osalThreadSuspendTimeoutS(&spi_devices[device_desc.bus].driver->thread, TIME_MS2I(timeout_us));
+    msg_t msg = osalThreadSuspendTimeoutS(&spi_devices[device_desc.bus].driver->thread, TIME_US2I(timeout_us));
     osalSysUnlock();
     if (msg == MSG_TIMEOUT) {
         ret = false;
@@ -426,11 +426,11 @@ void SPIDevice::test_clock_freq(void)
     hal.console->printf("Waiting for USB\n");
     for (uint8_t i=0; i<3; i++) {
         hal.scheduler->delay(1000);
-        hal.console->printf("Waiting %u\n", AP_HAL::millis());
+        hal.console->printf("Waiting %u\n", (unsigned)AP_HAL::millis());
     }
     hal.console->printf("CLOCKS=\n");
     for (uint8_t i=0; i<ARRAY_SIZE(bus_clocks); i++) {
-        hal.console->printf("%u:%u ", i+1, bus_clocks[i]);
+        hal.console->printf("%u:%u ", unsigned(i+1), unsigned(bus_clocks[i]));
     }
     hal.console->printf("\n");
 
@@ -465,7 +465,7 @@ void SPIDevice::test_clock_freq(void)
         uint32_t t1 = AP_HAL::micros();
         spiStop(spi_devices[i].driver);
         spiReleaseBus(spi_devices[i].driver);
-        hal.console->printf("SPI[%u] clock=%u\n", spi_devices[i].busid, unsigned(1000000ULL * len * 8ULL / uint64_t(t1 - t0)));
+        hal.console->printf("SPI[%u] clock=%u\n", unsigned(spi_devices[i].busid), unsigned(1000000ULL * len * 8ULL / uint64_t(t1 - t0)));
     }
     hal.util->free_type(buf1, len, AP_HAL::Util::MEM_DMA_SAFE);
     hal.util->free_type(buf2, len, AP_HAL::Util::MEM_DMA_SAFE);

@@ -178,12 +178,6 @@ PE1 UART8_TX UART8
 # UART for IOMCU
 IOMCU_UART UART8
 
-# enable RTSCTS support
-define AP_FEATURE_RTSCTS 1
-
-# enable SBUS_OUT on IOMCU (if you have an IOMCU)
-define AP_FEATURE_SBUS_OUT 1
-
 # PWM AUX channels
 PE14 TIM1_CH4 TIM1 PWM(1) GPIO(50)
 PA10 TIM1_CH3 TIM1 PWM(2) GPIO(51)
@@ -290,7 +284,7 @@ PC12 SDMMC_CK SDMMC1
 PD2 SDMMC_CMD SDMMC1
 
 # red LED marked as B/E
-PB1 LED_RED OUTPUT GPIO(90)
+PB1 LED_RED OUTPUT OPENDRAIN GPIO(90)
 
 # green LED marked as PWR. We leave this solid on, but allow
 # for it to be controlled as a relay if needed

@@ -66,7 +66,9 @@ void Sub::init_ardupilot()
     g2.gripper.init();
 #endif
 
+#if AC_FENCE == ENABLED
     fence.init();
+#endif
 
     // initialise notify system
     notify.init();
@@ -131,6 +133,10 @@ void Sub::init_ardupilot()
 #if MOUNT == ENABLED
     // initialise camera mount
     camera_mount.init();
+    // This step ncessary so the servo is properly initialized
+    camera_mount.set_angle_targets(0, 0, 0);
+    // for some reason the call to set_angle_targets changes the mode to mavlink targeting!
+    camera_mount.set_mode(MAV_MOUNT_MODE_RC_TARGETING);
 #endif
 
 #ifdef USERHOOK_INIT
@@ -188,9 +194,7 @@ void Sub::init_ardupilot()
     startup_INS_ground();
 
 #ifdef ENABLE_SCRIPTING
-    if (!g2.scripting.init()) {
-        gcs().send_text(MAV_SEVERITY_ERROR, "Scripting failed to start");
-    }
+    g2.scripting.init();
 #endif // ENABLE_SCRIPTING
 
     // we don't want writes to the serial port to cause us to pause
@@ -300,3 +304,14 @@ bool Sub::should_log(uint32_t mask)
     return false;
 #endif
 }
+
+#include <AP_AdvancedFailsafe/AP_AdvancedFailsafe.h>
+#include <AP_Avoidance/AP_Avoidance.h>
+#include <AP_ADSB/AP_ADSB.h>
+
+// dummy method to avoid linking AFS
+bool AP_AdvancedFailsafe::gcs_terminate(bool should_terminate, const char *reason) { return false; }
+AP_AdvancedFailsafe *AP::advancedfailsafe() { return nullptr; }
+
+// dummy method to avoid linking AP_Avoidance
+AP_Avoidance *AP::ap_avoidance() { return nullptr; }

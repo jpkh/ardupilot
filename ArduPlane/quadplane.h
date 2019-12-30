@@ -124,9 +124,9 @@ public:
     // check if we have completed transition to vtol
     bool tailsitter_transition_vtol_complete(void) const;
 
-    // account for surface speed scaling in hover
+    // account for control surface speed scaling in VTOL modes
     void tailsitter_speed_scaling(void);
-    
+
     // user initiated takeoff for guided mode
     bool do_user_takeoff(float takeoff_altitude);
 
@@ -149,6 +149,7 @@ public:
         int16_t  target_climb_rate;
         int16_t  climb_rate;
         float    throttle_mix;
+        float    speed_scaler;
     };
 
     MAV_TYPE get_mav_type(void) const;
@@ -279,7 +280,12 @@ private:
     // angular error at which quad assistance is given
     AP_Int8 assist_angle;
     uint32_t angle_error_start_ms;
-    
+
+    // altitude to trigger assistance
+    AP_Int16 assist_alt;
+    uint32_t alt_error_start_ms;
+    bool in_alt_assist;
+
     // maximum yaw rate in degrees/second
     AP_Float yaw_rate_max;
 
@@ -437,20 +443,25 @@ private:
         bool motors_active:1;
     } tilt;
 
+    // bit 0 enables plane mode and bit 1 enables body-frame roll mode
     enum tailsitter_input {
-        TAILSITTER_INPUT_MULTICOPTER = 0,
-        TAILSITTER_INPUT_PLANE       = 1,
-        TAILSITTER_INPUT_BF_ROLL_M   = 2,
-        TAILSITTER_INPUT_BF_ROLL_P   = 3,
+        TAILSITTER_INPUT_PLANE   = (1U<<0),
+        TAILSITTER_INPUT_BF_ROLL = (1U<<1)
     };
 
     enum tailsitter_mask {
-        TAILSITTER_MASK_AILERON  = 1,
-        TAILSITTER_MASK_ELEVATOR = 2,
-        TAILSITTER_MASK_THROTTLE = 4,
-        TAILSITTER_MASK_RUDDER   = 8,
+        TAILSITTER_MASK_AILERON  = (1U<<0),
+        TAILSITTER_MASK_ELEVATOR = (1U<<1),
+        TAILSITTER_MASK_THROTTLE = (1U<<2),
+        TAILSITTER_MASK_RUDDER   = (1U<<3),
     };
-    
+
+    enum tailsitter_gscl_mask {
+        TAILSITTER_GSCL_BOOST   = (1U<<0),
+        TAILSITTER_GSCL_ATT_THR = (1U<<1),
+        TAILSITTER_GSCL_INTERP  = (1U<<2),
+    };
+
     // tailsitter control variables
     struct {
         AP_Int8 transition_angle;
@@ -461,9 +472,16 @@ private:
         AP_Float vectored_hover_gain;
         AP_Float vectored_hover_power;
         AP_Float throttle_scale_max;
+        AP_Float gain_scaling_min;
         AP_Float max_roll_angle;
         AP_Int16 motor_mask;
+        AP_Float scaling_speed_min;
+        AP_Float scaling_speed_max;
+        AP_Int16 gain_scaling_mask;
     } tailsitter;
+
+    // tailsitter speed scaler
+    float last_spd_scaler = 1.0f;
 
     // the attitude view of the VTOL attitude controller
     AP_AHRS_View *ahrs_view;
@@ -512,6 +530,7 @@ private:
         OPTION_RESPECT_TAKEOFF_FRAME=(1<<3),
         OPTION_MISSION_LAND_FW_APPROACH=(1<<4),
         OPTION_FS_QRTL=(1<<5),
+        OPTION_IDLE_GOV_MANUAL=(1<<6),
     };
 
     AP_Float takeoff_failure_scalar;

@@ -370,7 +370,7 @@ bool ModeAuto::is_landing() const
 
 bool ModeAuto::is_taking_off() const
 {
-    return _mode == Auto_TakeOff;
+    return ((_mode == Auto_TakeOff) && !wp_nav->reached_wp_destination());
 }
 
 bool ModeAuto::landing_gear_should_be_deployed() const
@@ -741,10 +741,6 @@ bool ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
 void ModeAuto::takeoff_run()
 {
     auto_takeoff_run();
-    if (wp_nav->reached_wp_destination()) {
-        const Vector3f target = wp_nav->get_wp_destination();
-        wp_start(target, wp_nav->origin_and_destination_are_terrain_alt());
-    }
 }
 
 // auto_wp_run - runs the auto waypoint controller
@@ -1170,14 +1166,14 @@ void ModeAuto::do_land(const AP_Mission::Mission_Command& cmd)
     // if location provided we fly to that location at current altitude
     if (cmd.content.location.lat != 0 || cmd.content.location.lng != 0) {
         // set state to fly to location
-        land_state = LandStateType_FlyToLocation;
+        state = State::FlyToLocation;
 
         const Location target_loc = terrain_adjusted_location(cmd);
 
         wp_start(target_loc);
     } else {
         // set landing state
-        land_state = LandStateType_Descending;
+        state = State::Descending;
 
         // initialise landing controller
         land_start();
@@ -1456,15 +1452,15 @@ void ModeAuto::do_winch(const AP_Mission::Mission_Command& cmd)
     switch (cmd.content.winch.action) {
         case WINCH_RELAXED:
             g2.winch.relax();
-            Log_Write_Event(DATA_WINCH_RELAXED);
+            AP::logger().Write_Event(LogEvent::WINCH_RELAXED);
             break;
         case WINCH_RELATIVE_LENGTH_CONTROL:
             g2.winch.release_length(cmd.content.winch.release_length, cmd.content.winch.release_rate);
-            Log_Write_Event(DATA_WINCH_LENGTH_CONTROL);
+            AP::logger().Write_Event(LogEvent::WINCH_LENGTH_CONTROL);
             break;
         case WINCH_RATE_CONTROL:
             g2.winch.set_desired_rate(cmd.content.winch.release_rate);
-            Log_Write_Event(DATA_WINCH_RATE_CONTROL);
+            AP::logger().Write_Event(LogEvent::WINCH_RATE_CONTROL);
             break;
         default:
             // do nothing
@@ -1523,22 +1519,22 @@ bool ModeAuto::verify_land()
 {
     bool retval = false;
 
-    switch (land_state) {
-        case LandStateType_FlyToLocation:
+    switch (state) {
+        case State::FlyToLocation:
             // check if we've reached the location
             if (copter.wp_nav->reached_wp_destination()) {
                 // get destination so we can use it for loiter target
-                Vector3f dest = copter.wp_nav->get_wp_destination();
+                const Vector3f& dest = copter.wp_nav->get_wp_destination();
 
                 // initialise landing controller
                 land_start(dest);
 
                 // advance to next state
-                land_state = LandStateType_Descending;
+                state = State::Descending;
             }
             break;
 
-        case LandStateType_Descending:
+        case State::Descending:
             // rely on THROTTLE_LAND mode to correctly update landing status
             retval = copter.ap.land_complete && (motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE);
             break;
@@ -1759,8 +1755,8 @@ bool ModeAuto::verify_loiter_to_alt()
 bool ModeAuto::verify_RTL()
 {
     return (copter.mode_rtl.state_complete() && 
-    (copter.mode_rtl.state() == RTL_FinalDescent || copter.mode_rtl.state() == RTL_Land) &&
-    (motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE));
+            (copter.mode_rtl.state() == ModeRTL::RTL_FinalDescent || copter.mode_rtl.state() == ModeRTL::RTL_Land) &&
+            (motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE));
 }
 
 /********************************************************************************/

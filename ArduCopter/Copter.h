@@ -84,6 +84,10 @@
  #define MOTOR_CLASS AP_MotorsMulticopter
 #endif
 
+#if MODE_AUTOROTATE_ENABLED == ENABLED
+ #include <AC_Autorotation/AC_Autorotation.h> // Autorotation controllers
+#endif
+
 #include "RC_Channel.h"         // RC Channel Library
 
 #include "GCS_Mavlink.h"
@@ -95,6 +99,7 @@
 #if BEACON_ENABLED == ENABLED
  #include <AP_Beacon/AP_Beacon.h>
 #endif
+
 #if AC_AVOID_ENABLED == ENABLED
  #include <AC_Avoidance/AC_Avoid.h>
 #endif
@@ -230,6 +235,7 @@ public:
     friend class ModeSystemId;
     friend class ModeThrow;
     friend class ModeZigZag;
+    friend class ModeAutorotate;
 
     Copter(void);
 
@@ -286,7 +292,8 @@ private:
         void set_target_alt_cm(float target_alt_cm);
 
         // get target and actual distances (in m) for logging purposes
-        bool get_dist_for_logging(float &target_dist, float &actual_dist) const;
+        bool get_target_dist_for_logging(float &target_dist) const;
+        float get_dist_for_logging() const;
         void invalidate_for_logging() { valid_for_logging = false; }
 
         // surface tracking surface
@@ -311,10 +318,7 @@ private:
     AP_RPM rpm_sensor;
 #endif
 
-    // Inertial Navigation EKF
-    NavEKF2 EKF2{&ahrs, rangefinder};
-    NavEKF3 EKF3{&ahrs, rangefinder};
-    AP_AHRS_NavEKF ahrs{EKF2, EKF3, AP_AHRS_NavEKF::FLAG_ALWAYS_USE_EKF};
+    // Inertial Navigation EKF - different viewpoint
     AP_AHRS_View *ahrs_view;
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
@@ -389,9 +393,7 @@ private:
     // There are multiple states defined such as STABILIZE, ACRO,
     Mode::Number control_mode;
     ModeReason control_mode_reason = ModeReason::UNKNOWN;
-
     Mode::Number prev_control_mode;
-    ModeReason prev_control_mode_reason = ModeReason::UNKNOWN;
 
     RCMapper rcmap;
 
@@ -477,6 +479,7 @@ private:
     AC_PosControl *pos_control;
     AC_WPNav *wp_nav;
     AC_Loiter *loiter_nav;
+
 #if MODE_CIRCLE_ENABLED == ENABLED
     AC_Circle *circle_nav;
 #endif
@@ -496,8 +499,7 @@ private:
 
     // Camera/Antenna mount tracking and stabilisation stuff
 #if MOUNT == ENABLED
-    // current_loc uses the baro/gps solution for altitude rather than gps only.
-    AP_Mount camera_mount{current_loc};
+    AP_Mount camera_mount;
 #endif
 
     // AC_Fence library to reduce fly-aways
@@ -522,11 +524,6 @@ private:
     // Parachute release
 #if PARACHUTE == ENABLED
     AP_Parachute parachute{relay};
-#endif
-
-    // Button 
-#if BUTTON_ENABLED == ENABLED
-    AP_Button button;
 #endif
 
     // Landing Gear Controller
@@ -575,6 +572,7 @@ private:
     typedef struct {
         uint8_t dynamic_flight          : 1;    // 0   // true if we are moving at a significant speed (used to turn on/off leaky I terms)
         uint8_t inverted_flight         : 1;    // 1   // true for inverted flight mode
+        uint8_t in_autorotation         : 1;    // 2   // true when heli is in autorotation
     } heli_flags_t;
     heli_flags_t heli_flags;
 
@@ -614,6 +612,14 @@ private:
         Failsafe_Action_SmartRTL       = 3,
         Failsafe_Action_SmartRTL_Land  = 4,
         Failsafe_Action_Terminate      = 5
+    };
+
+    enum class FailsafeOption {
+        RC_CONTINUE_IF_AUTO             = (1<<0),   // 1
+        GCS_CONTINUE_IF_AUTO            = (1<<1),   // 2
+        RC_CONTINUE_IF_GUIDED           = (1<<2),   // 4
+        CONTINUE_IF_LANDING             = (1<<3),   // 8
+        GCS_CONTINUE_IF_PILOT_CONTROL   = (1<<4),   // 16
     };
 
     static constexpr int8_t _failsafe_priorities[] = {
@@ -710,10 +716,12 @@ private:
     void esc_calibration_setup();
 
     // events.cpp
+    bool failsafe_option(FailsafeOption opt) const;
     void failsafe_radio_on_event();
     void failsafe_radio_off_event();
     void handle_battery_failsafe(const char* type_str, const int8_t action);
     void failsafe_gcs_check();
+    void failsafe_gcs_on_event(void);
     void failsafe_gcs_off_event(void);
     void failsafe_terrain_check();
     void failsafe_terrain_set_status(bool data_ok);
@@ -723,6 +731,7 @@ private:
     void set_mode_SmartRTL_or_RTL(ModeReason reason);
     void set_mode_SmartRTL_or_land_with_pause(ModeReason reason);
     bool should_disarm_on_failsafe();
+    void do_failsafe_action(Failsafe_Action action, ModeReason reason);
 
     // failsafe.cpp
     void failsafe_enable();
@@ -737,10 +746,14 @@ private:
     // heli.cpp
     void heli_init();
     void check_dynamic_flight(void);
+    bool should_use_landing_swash() const;
     void update_heli_control_dynamics(void);
     void heli_update_landing_swash();
     void heli_update_rotor_speed_targets();
-
+    void heli_update_autorotation();
+#if MODE_AUTOROTATE_ENABLED == ENABLED
+    void heli_set_autorotation(bool autotrotation);
+#endif
     // inertia.cpp
     void read_inertia();
 
@@ -763,12 +776,11 @@ private:
     void Log_Write_Attitude();
     void Log_Write_EKF_POS();
     void Log_Write_MotBatt();
-    void Log_Write_Event(Log_Event id);
-    void Log_Write_Data(uint8_t id, int32_t value);
-    void Log_Write_Data(uint8_t id, uint32_t value);
-    void Log_Write_Data(uint8_t id, int16_t value);
-    void Log_Write_Data(uint8_t id, uint16_t value);
-    void Log_Write_Data(uint8_t id, float value);
+    void Log_Write_Data(LogDataID id, int32_t value);
+    void Log_Write_Data(LogDataID id, uint32_t value);
+    void Log_Write_Data(LogDataID id, int16_t value);
+    void Log_Write_Data(LogDataID id, uint16_t value);
+    void Log_Write_Data(LogDataID id, float value);
     void Log_Write_Parameter_Tuning(uint8_t param, float tuning_val, float tune_min, float tune_max);
     void Log_Sensor_Health();
 #if FRAME_CONFIG == HELI_FRAME
@@ -813,6 +825,7 @@ private:
     void convert_pid_parameters(void);
     void convert_lgr_parameters(void);
     void convert_tradheli_parameters(void);
+    void convert_fs_options_params(void);
 
     // precision_landing.cpp
     void init_precland();
@@ -875,7 +888,6 @@ private:
     // terrain.cpp
     void terrain_update();
     void terrain_logging();
-    bool terrain_use();
 
     // tuning.cpp
     void tuning();
@@ -967,6 +979,9 @@ private:
 #endif
 #if MODE_ZIGZAG_ENABLED == ENABLED
     ModeZigZag mode_zigzag;
+#endif
+#if MODE_AUTOROTATE_ENABLED == ENABLED
+    ModeAutorotate mode_autorotate;
 #endif
 
     // mode.cpp

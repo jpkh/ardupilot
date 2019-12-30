@@ -21,6 +21,9 @@
 
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+
 #include <GCS_MAVLink/GCS_MAVLink.h>
 #include <AP_Logger/AP_Logger.h>
 
@@ -195,6 +198,15 @@ const AP_Param::GroupInfo SITL::var_info2[] = {
     // @Path: ./SIM_ToneAlarm.cpp
     AP_SUBGROUPINFO(tonealarm_sim, "TA_", 57, SITL, ToneAlarm),
 
+    AP_GROUPINFO("EFI_TYPE",    58, SITL,  efi_type,  SITL::EFI_TYPE_NONE),
+
+    AP_GROUPINFO("SAFETY_STATE",    59, SITL,  _safety_switch_state, 0),
+
+    AP_GROUPINFO("MAG_SCALING",    60, SITL,  mag_scaling, 1),
+
+    // max motor vibration frequency
+    AP_GROUPINFO("VIB_MOT_MAX", 61, SITL,  vibe_motor, 0.0f),
+
     AP_GROUPEND
 
 };
@@ -310,3 +322,5 @@ SITL::SITL *sitl()
 }
 
 };
+
+#endif // CONFIG_HAL_BOARD

@@ -11,6 +11,7 @@ import traceback
 import pexpect
 import fnmatch
 import operator
+import numpy
 
 from MAVProxy.modules.lib import mp_util
 
@@ -118,6 +119,7 @@ class ArmedAtEndOfTestException(ErrorException):
 class Context(object):
     def __init__(self):
         self.parameters = []
+        self.sitl_commandline_customised = False
 
 # https://stackoverflow.com/questions/616645/how-do-i-duplicate-sys-stdout-to-a-log-file-in-python
 class TeeBoth(object):
@@ -419,7 +421,7 @@ class AutoTest(ABC):
 
             self.mavproxy.send("set streamrate %u\n" % (streamrate))
             self.mavproxy.send("set streamrate\n")
-            self.mavproxy.expect('.*streamrate ([0-9]+)', timeout=1)
+            self.mavproxy.expect('.*streamrate ((?:-)?[0-9]+)', timeout=1)
             rate = self.mavproxy.match.group(1)
             print("rate: %s" % str(rate))
             if int(rate) == int(streamrate):
@@ -446,6 +448,34 @@ class AutoTest(ABC):
         self.set_streamrate(self.sitl_streamrate())
         self.progress("Reboot complete")
 
+    def customise_SITL_commandline(self, customisations):
+        '''customisations could be "--uartF=sim:nmea" '''
+        self.contexts[-1].sitl_commandline_customised = True
+        self.stop_SITL()
+        self.start_SITL(customisations=customisations, wipe=False)
+        self.wait_heartbeat(drain_mav=True)
+        # MAVProxy only checks the streamrates once every 15 seconds.
+        # Encourage it:
+        self.set_streamrate(self.sitl_streamrate()+1)
+        self.set_streamrate(self.sitl_streamrate())
+        # we also need to wait for MAVProxy to requests streams again
+        # - in particular, RC_CHANNELS.
+        m = self.mav.recv_match(type='RC_CHANNELS', blocking=True, timeout=15)
+        if m is None:
+            raise NotAchievedException("No RC_CHANNELS message after restarting SITL")
+
+    def reset_SITL_commandline(self):
+        self.progress("Resetting SITL commandline to default")
+        self.stop_SITL()
+        self.start_SITL(wipe=False)
+        self.set_streamrate(self.sitl_streamrate()+1)
+        self.set_streamrate(self.sitl_streamrate())
+        self.progress("Reset SITL commandline to default")
+
+    def stop_SITL(self):
+        self.progress("Stopping SITL")
+        util.pexpect_close(self.sitl)
+
     def close(self):
         """Tidy up after running all tests."""
         if self.use_map:
@@ -454,7 +484,7 @@ class AutoTest(ABC):
 
         self.mav.close()
         util.pexpect_close(self.mavproxy)
-        util.pexpect_close(self.sitl)
+        self.stop_SITL()
 
         valgrind_log = util.valgrind_log_filepath(binary=self.binary,
                                                   model=self.frame)
@@ -563,15 +593,6 @@ class AutoTest(ABC):
             raise NotAchievedException("No cached time available")
         return x.time_boot_ms * 1.0e-3
 
-    def delay_sim_time(self, delay):
-        '''delay for delay seconds in simulation time'''
-        m = self.mav.recv_match(type='SYSTEM_TIME', blocking=True)
-        start = m.time_boot_ms
-        while True:
-            m = self.mav.recv_match(type='SYSTEM_TIME', blocking=True)
-            if m.time_boot_ms - start > delay * 1000:
-                return
-
     def sim_location(self):
         """Return current simulator location."""
         m = self.mav.recv_match(type='SIMSTATE', blocking=True)
@@ -583,19 +604,19 @@ class AutoTest(ABC):
     def save_wp(self, ch=7):
         """Trigger RC Aux to save waypoint."""
         self.set_rc(ch, 1000)
-        self.wait_seconds(1)
+        self.delay_sim_time(1)
         self.set_rc(ch, 2000)
-        self.wait_seconds(1)
+        self.delay_sim_time(1)
         self.set_rc(ch, 1000)
-        self.wait_seconds(1)
+        self.delay_sim_time(1)
 
     def clear_wp(self, ch=8):
         """Trigger RC Aux to clear waypoint."""
         self.progress("Clearing waypoints")
         self.set_rc(ch, 1000)
-        self.wait_seconds(0.5)
+        self.delay_sim_time(0.5)
         self.set_rc(ch, 2000)
-        self.wait_seconds(0.5)
+        self.delay_sim_time(0.5)
         self.set_rc(ch, 1000)
         self.mavproxy.send('wp list\n')
         self.mavproxy.expect('Requesting 0 waypoints')
@@ -612,6 +633,8 @@ class AutoTest(ABC):
         self.mavproxy.send("set shownoise 0\n")
         self.mavproxy.send("log download latest %s\n" % filename)
         self.mavproxy.expect("Finished downloading", timeout=timeout)
+        self.mavproxy.send("module unload log\n")
+        self.mavproxy.expect("Unloaded module log")
         self.drain_mav_unparsed()
         self.wait_heartbeat()
         self.wait_heartbeat()
@@ -625,7 +648,7 @@ class AutoTest(ABC):
             flist = glob.glob("logs/*.BIN")
             for e in ['BIN', 'bin', 'tlog']:
                 flist += glob.glob(os.path.join(logdir, '*.%s' % e))
-            print("Uploading %u logs to http://firmware.ardupilot.org/CI-Logs/%s" % (len(flist), datedir))
+            print("Uploading %u logs to https://firmware.ardupilot.org/CI-Logs/%s" % (len(flist), datedir))
             cmd = ['rsync', '-avz'] + flist + ['cilogs@autotest.ardupilot.org::CI-Logs/%s/' % datedir]
             subprocess.call(cmd)
 
@@ -1456,7 +1479,7 @@ class AutoTest(ABC):
                 ret = getattr(loc, attr)
                 break
         if ret is None:
-            raise ValueError("None of %s in loc" % str(attrs))
+            raise ValueError("None of %s in loc(%s)" % (str(attrs), str(loc)))
         return ret
 
     @staticmethod
@@ -1548,8 +1571,9 @@ class AutoTest(ABC):
             raise NotAchievedException("Did not get AUTOPILOT_VERSION")
         return m.capabilities
 
-    def do_get_autopilot_capabilities(self):
+    def test_get_autopilot_capabilities(self):
         self.assert_capability(mavutil.mavlink.MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT)
+        self.assert_capability(mavutil.mavlink.MAV_PROTOCOL_CAPABILITY_COMPASS_CALIBRATION)
 
     def get_mode_from_mode_mapping(self, mode):
         """Validate and return the mode number from a string or int."""
@@ -1713,7 +1737,7 @@ class AutoTest(ABC):
     #################################################
     # WAIT UTILITIES
     #################################################
-    def wait_seconds(self, seconds_to_wait):
+    def delay_sim_time(self, seconds_to_wait):
         """Wait some second in SITL time."""
         tstart = self.get_sim_time()
         tnow = tstart
@@ -2211,6 +2235,8 @@ class AutoTest(ABC):
                           self.get_exception_stacktrace(e))
             ex = e
         self.test_timings[desc] = time.time() - start_time
+        if self.contexts[-1].sitl_commandline_customised:
+            self.reset_SITL_commandline()
         self.context_pop()
 
         passed = True
@@ -2281,6 +2307,28 @@ class AutoTest(ABC):
         self.progress("Waiting for Parameters")
         self.mavproxy.expect('Received [0-9]+ parameters')
 
+    def start_SITL(self, **sitl_args):
+        start_sitl_args = {
+            "breakpoints": self.breakpoints,
+            "disable_breakpoints": self.disable_breakpoints,
+            "defaults_file": self.defaults_filepath(),
+            "gdb": self.gdb,
+            "gdbserver": self.gdbserver,
+            "lldb": self.lldb,
+            "home": self.sitl_home(),
+            "model": self.frame,
+            "speedup": self.speedup,
+            "valgrind": self.valgrind,
+            "vicon": self.uses_vicon(),
+            "wipe": True,
+        }
+        start_sitl_args.update(**sitl_args)
+        self.progress("Starting SITL")
+        self.sitl = util.start_SITL(self.binary, **start_sitl_args)
+
+    def sitl_is_running(self):
+        return self.sitl.is_alive()
+
     def init(self):
         """Initilialize autotest feature."""
         self.check_test_syntax(test_file=self.test_filepath())
@@ -2291,20 +2339,7 @@ class AutoTest(ABC):
             self.frame = self.default_frame()
 
         self.progress("Starting simulator")
-        self.sitl = util.start_SITL(self.binary,
-                                    breakpoints=self.breakpoints,
-                                    disable_breakpoints=self.disable_breakpoints,
-                                    defaults_file=self.defaults_filepath(),
-                                    gdb=self.gdb,
-                                    gdbserver=self.gdbserver,
-                                    lldb=self.lldb,
-                                    home=self.sitl_home(),
-                                    model=self.frame,
-                                    speedup=self.speedup,
-                                    valgrind=self.valgrind,
-                                    vicon=self.uses_vicon(),
-                                    wipe=True,
-                                    )
+        self.start_SITL()
 
         self.start_mavproxy()
 
@@ -3146,7 +3181,7 @@ class AutoTest(ABC):
             raise NotAchievedException("Failed to clear mission")
         self.last_wp_load = time.time()
 
-    def test_sensor_config_error_loop(self):
+    def test_config_error_loop(self):
         '''test the sensor config error loop works and that parameter sets are persistent'''
         parameter_name = "SERVO8_MIN"
         old_parameter_value = self.get_parameter(parameter_name)
@@ -3163,8 +3198,8 @@ class AutoTest(ABC):
                 self.disarm_vehicle(force=True)
 
             self.reboot_sitl(required_bootcount=1);
-            self.progress("Waiting for 'Check BRD_TYPE'")
-            self.mavproxy.expect("Check BRD_TYPE");
+            self.progress("Waiting for 'Config error'")
+            self.mavproxy.expect("Config error");
             self.progress("Setting %s to %f" % (parameter_name, new_parameter_value))
             self.set_parameter(parameter_name, new_parameter_value)
         except Exception as e:
@@ -3598,6 +3633,60 @@ switch value'''
         if ex is not None:
             raise ex
 
+    def drain_mav_seconds(self, seconds):
+        tstart = self.get_sim_time_cached()
+        while self.get_sim_time_cached() - tstart < seconds:
+            self.drain_mav();
+            self.delay_sim_time(0.5)
+
+    def nmea_output(self):
+        self.set_parameter("SERIAL5_PROTOCOL", 20) # serial5 is NMEA output
+        self.set_parameter("GPS_TYPE2", 5) # GPS2 is NMEA
+        self.customise_SITL_commandline([
+            "--uartE=tcp:6735", # GPS2 is NMEA....
+            "--uartF=tcpclient:127.0.0.1:6735", # serial5 spews to localhost:6735
+        ])
+        gps1 = self.mav.recv_match(type="GPS_RAW_INT", blocking=True, timeout=10)
+        if gps1 is None:
+            raise NotAchievedException("Did not receive GPS_RAW_INT")
+        gps2 = self.mav.recv_match(type="GPS2_RAW", blocking=True, timeout=10)
+        if gps2 is None:
+            raise NotAchievedException("Did not receive GPS2_RAW")
+        if self.get_distance_int(gps1, gps2) > 1:
+            raise NotAchievedException("NMEA output inaccurate")
+
+    def test_button(self):
+        self.set_parameter("SIM_PIN_MASK", 0)
+        self.set_parameter("BTN_ENABLE", 1)
+        btn = 2
+        pin = 3
+        self.drain_mav()
+        self.set_parameter("BTN_PIN%u" % btn, pin)
+        m = self.mav.recv_match(type='BUTTON_CHANGE', blocking=True, timeout=1)
+        self.progress("m: %s" % str(m))
+        if m is None:
+            raise NotAchievedException("Did not get BUTTON_CHANGE event")
+        mask = 1<<btn
+        if m.state & mask:
+            raise NotAchievedException("Bit incorrectly set in mask (got=%u dontwant=%u)" % (m.state, mask))
+        # SITL instantly reverts the pin to its old value
+        m2 = self.mav.recv_match(type='BUTTON_CHANGE', blocking=True, timeout=1)
+        self.progress("m2: %s" % str(m2))
+        if m2 is None:
+            raise NotAchievedException("Did not get repeat message")
+        # wait for messages to stop coming:
+        self.drain_mav_seconds(15)
+
+        self.set_parameter("SIM_PIN_MASK", 0)
+        m3 = self.mav.recv_match(type='BUTTON_CHANGE', blocking=True, timeout=1)
+        self.progress("m3: %s" % str(m3))
+        if m3 is None:
+            raise NotAchievedException("Did not get new message")
+        if m.last_change_ms == m3.last_change_ms:
+            raise NotAchievedException("last_change_ms same as first message")
+        if m3.state != 0:
+            raise NotAchievedException("Didn't get expected mask back in message (mask=0 state=%u" % (m3.state))
+
     def tests(self):
         return [
             ("PIDTuning",
@@ -3610,9 +3699,9 @@ switch value'''
             "Test Set Home",
              self.fly_test_set_home),
 
-            ("SensorConfigErrorLoop",
-             "Test Sensor Config Error Loop",
-             self.test_sensor_config_error_loop),
+            ("ConfigErrorLoop",
+             "Test Config Error Loop",
+             self.test_config_error_loop),
 
             ("Parameters",
              "Test Parameter Set/Get",
@@ -3641,3 +3730,98 @@ switch value'''
         ret = self.run_tests(tests)
         self.post_tests_announcements()
         return ret
+
+    def mavfft_fttd(self, sensor_type, sensor_instance, since, until):
+        '''display fft for raw ACC data in current logfile'''
+
+        '''object to store data about a single FFT plot'''
+        class MessageData(object):
+            def __init__(self, ffth):
+                self.seqno = -1
+                self.fftnum = ffth.N
+                self.sensor_type = ffth.type
+                self.instance = ffth.instance
+                self.sample_rate_hz = ffth.smp_rate
+                self.multiplier = ffth.mul
+                self.sample_us = ffth.SampleUS
+                self.data = {}
+                self.data["X"] = []
+                self.data["Y"] = []
+                self.data["Z"] = []
+                self.holes = False
+                self.freq = None
+
+            def add_fftd(self, fftd):
+                self.seqno += 1
+                self.data["X"].extend(fftd.x)
+                self.data["Y"].extend(fftd.y)
+                self.data["Z"].extend(fftd.z)
+
+        mlog = self.dfreader_for_current_onboard_log()
+
+        # see https://holometer.fnal.gov/GH_FFT.pdf for a description of the techniques used here
+        messages = []
+        messagedata = None
+        while True:
+            m = mlog.recv_match()
+            if m is None:
+                break
+            msg_type = m.get_type()
+            if msg_type == "ISBH":
+                if messagedata is not None:
+                    if messagedata.sensor_type == sensor_type and messagedata.instance == sensor_instance and messagedata.sample_us > since and messagedata.sample_us < until:
+                        messages.append(messagedata)
+                messagedata = MessageData(m)
+                continue
+
+            if msg_type == "ISBD":
+                if messagedata is not None and messagedata.sensor_type == sensor_type and messagedata.instance == sensor_instance:
+                    messagedata.add_fftd(m)
+
+        fft_len = len(messages[0].data["X"])
+        sum_fft = {
+                "X": numpy.zeros(fft_len/2+1),
+                "Y": numpy.zeros(fft_len/2+1),
+                "Z": numpy.zeros(fft_len/2+1),
+            }
+        sample_rate = 0
+        counts = 0
+        window = numpy.hanning(fft_len)
+        freqmap = numpy.fft.rfftfreq(fft_len, 1.0 / messages[0].sample_rate_hz)
+
+        # calculate NEBW constant
+        S2 = numpy.inner(window, window)
+
+        for message in messages:
+            for axis in [ "X","Y","Z" ]:
+                # normalize data and convert to dps in order to produce more meaningful magnitudes
+                if message.sensor_type == 1:
+                    d = numpy.array(numpy.degrees(message.data[axis])) / float(message.multiplier)
+                else:
+                    d = numpy.array(message.data[axis]) / float(message.multiplier)
+
+                # apply window to the input
+                d *= window
+                # perform RFFT
+                d_fft = numpy.fft.rfft(d)
+                # convert to squared complex magnitude
+                d_fft = numpy.square(abs(d_fft))
+                # remove DC component
+                d_fft[0] = 0
+                d_fft[-1] = 0
+                # accumulate the sums
+                sum_fft[axis] += d_fft
+
+            sample_rate = message.sample_rate_hz
+            counts += 1
+
+        numpy.seterr(divide = 'ignore')
+        psd = {}
+        for axis in [ "X","Y","Z" ]:
+            # normalize output to averaged PSD
+            psd[axis] = 2 * (sum_fft[axis] / counts) / (sample_rate * S2)
+            psd[axis] = 10 * numpy.log10 (psd[axis])
+
+        psd["F"] = freqmap
+
+        return psd

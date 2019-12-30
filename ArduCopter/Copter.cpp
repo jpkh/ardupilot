@@ -69,7 +69,7 @@
  *  ..and many more.
  *
  *  Code commit statistics can be found here: https://github.com/ArduPilot/ardupilot/graphs/contributors
- *  Wiki: http://copter.ardupilot.org/
+ *  Wiki: https://copter.ardupilot.org/
  *
  */
 
@@ -107,7 +107,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK(read_rangefinder,      20,    100),
 #endif
 #if PROXIMITY_ENABLED == ENABLED
-    SCHED_TASK_CLASS(AP_Proximity,         &copter.g2.proximity,        update,         100,  50),
+    SCHED_TASK_CLASS(AP_Proximity,         &copter.g2.proximity,        update,         200,  50),
 #endif
 #if BEACON_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_Beacon,            &copter.g2.beacon,           update,         400,  50),
@@ -199,7 +199,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK(userhook_SuperSlowLoop, 1,   75),
 #endif
 #if BUTTON_ENABLED == ENABLED
-    SCHED_TASK_CLASS(AP_Button,            &copter.g2.button,           update,           5, 100),
+    SCHED_TASK_CLASS(AP_Button,            &copter.button,           update,           5, 100),
 #endif
 #if STATS_ENABLED == ENABLED
     SCHED_TASK_CLASS(AP_Stats,             &copter.g2.stats,            update,           1, 100),
@@ -250,6 +250,9 @@ void Copter::fast_loop()
 
 #if FRAME_CONFIG == HELI_FRAME
     update_heli_control_dynamics();
+    #if MODE_AUTOROTATE_ENABLED == ENABLED
+        heli_update_autorotation();
+    #endif
 #endif //HELI_FRAME
 
     // Inertial Nav
@@ -403,6 +406,13 @@ void Copter::twentyfive_hz_logging()
     // log output
     Log_Write_Precland();
 #endif
+
+#if MODE_AUTOROTATE_ENABLED == ENABLED
+    if (should_log(MASK_LOG_ATTITUDE_MED) || should_log(MASK_LOG_ATTITUDE_FAST)) {
+        //update autorotation log
+        g2.arot.Log_Write_Autorotation();
+    }
+#endif
 }
 
 // three_hz_loop - 3.3hz loop
@@ -428,7 +438,7 @@ void Copter::three_hz_loop()
 void Copter::one_hz_loop()
 {
     if (should_log(MASK_LOG_ANY)) {
-        Log_Write_Data(DATA_AP_STATE, ap.value);
+        Log_Write_Data(LogDataID::AP_STATE, ap.value);
     }
 
     arming.update();
@@ -498,7 +508,7 @@ void Copter::init_simple_bearing()
 
     // log the simple bearing
     if (should_log(MASK_LOG_ANY)) {
-        Log_Write_Data(DATA_INIT_SIMPLE_BEARING, ahrs.yaw_sensor);
+        Log_Write_Data(LogDataID::INIT_SIMPLE_BEARING, ahrs.yaw_sensor);
     }
 }
 
@@ -613,5 +623,6 @@ Copter::Copter(void)
 }
 
 Copter copter;
+AP_Vehicle& vehicle = copter;
 
 AP_HAL_MAIN_CALLBACKS(&copter);

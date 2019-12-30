@@ -93,7 +93,7 @@ uint32_t GCS_Plane::custom_mode() const
     return plane.control_mode->mode_number();
 }
 
-MAV_STATE GCS_MAVLINK_Plane::system_status() const
+MAV_STATE GCS_MAVLINK_Plane::vehicle_system_status() const
 {
     if (plane.control_mode == &plane.mode_initializing) {
         return MAV_STATE_CALIBRATING;
@@ -257,7 +257,7 @@ float GCS_MAVLINK_Plane::vfr_hud_airspeed() const
 
 int16_t GCS_MAVLINK_Plane::vfr_hud_throttle() const
 {
-    return abs(plane.throttle_percentage());
+    return plane.throttle_percentage();
 }
 
 float GCS_MAVLINK_Plane::vfr_hud_climbrate() const
@@ -588,6 +588,7 @@ static const ap_message STREAM_EXTRA1_msgs[] = {
     MSG_PID_TUNING,
     MSG_LANDING,
     MSG_ESC_TELEMETRY,
+    MSG_EFI_STATUS,
 };
 static const ap_message STREAM_EXTRA2_msgs[] = {
     MSG_VFR_HUD
@@ -709,22 +710,22 @@ void GCS_MAVLINK_Plane::packetReceived(const mavlink_status_t &status,
 }
 
 
-bool GCS_MAVLINK_Plane::set_home_to_current_location(bool lock)
+bool GCS_MAVLINK_Plane::set_home_to_current_location(bool _lock)
 {
     if (!plane.set_home_persistently(AP::gps().location())) {
         return false;
     }
-    if (lock) {
+    if (_lock) {
         AP::ahrs().lock_home();
     }
     return true;
 }
-bool GCS_MAVLINK_Plane::set_home(const Location& loc, bool lock)
+bool GCS_MAVLINK_Plane::set_home(const Location& loc, bool _lock)
 {
     if (!AP::ahrs().set_home(loc)) {
         return false;
     }
-    if (lock) {
+    if (_lock) {
         AP::ahrs().lock_home();
     }
     return true;
@@ -1150,10 +1151,6 @@ void GCS_MAVLINK_Plane::handleMessage(const mavlink_message_t &msg)
         break;
     }
 
-    case MAVLINK_MSG_ID_DISTANCE_SENSOR:
-        plane.rangefinder.handle_msg(msg);
-        break;
-
     case MAVLINK_MSG_ID_TERRAIN_DATA:
     case MAVLINK_MSG_ID_TERRAIN_CHECK:
 #if AP_TERRAIN_AVAILABLE
@@ -1389,7 +1386,6 @@ void GCS_MAVLINK_Plane::handle_mission_set_current(AP_Mission &mission, const ma
 uint64_t GCS_MAVLINK_Plane::capabilities() const
 {
     return (MAV_PROTOCOL_CAPABILITY_MISSION_FLOAT |
-            MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT |
             MAV_PROTOCOL_CAPABILITY_COMMAND_INT |
             MAV_PROTOCOL_CAPABILITY_MISSION_INT |
             MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_GLOBAL_INT |
@@ -1397,6 +1393,5 @@ uint64_t GCS_MAVLINK_Plane::capabilities() const
 #if AP_TERRAIN_AVAILABLE
             (plane.terrain.enabled() ? MAV_PROTOCOL_CAPABILITY_TERRAIN : 0) |
 #endif
-            MAV_PROTOCOL_CAPABILITY_COMPASS_CALIBRATION |
             GCS_MAVLINK::capabilities());
 }

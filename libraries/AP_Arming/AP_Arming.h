@@ -33,6 +33,7 @@ public:
         ARMING_CHECK_SYSTEM      = (1U << 13),
         ARMING_CHECK_MISSION     = (1U << 14),
         ARMING_CHECK_RANGEFINDER = (1U << 15),
+        ARMING_CHECK_CAMERA      = (1U << 16),
     };
 
     enum class Method {
@@ -124,6 +125,8 @@ protected:
 
     bool fence_checks(bool report);
 
+    bool camera_checks(bool display_failure);
+
     virtual bool system_checks(bool report);
 
     bool can_checks(bool report);
@@ -132,6 +135,9 @@ protected:
 
     bool servo_checks(bool report) const;
     bool rc_checks_copter_sub(bool display_failure, const RC_Channel *channels[4]) const;
+
+    // mandatory checks that cannot be bypassed.  This function will only be called if ARMING_CHECK is zero or arming forced
+    virtual bool mandatory_checks(bool report) { return true; }
 
     // returns true if a particular check is enabled
     bool check_enabled(const enum AP_Arming::ArmingChecks check) const;

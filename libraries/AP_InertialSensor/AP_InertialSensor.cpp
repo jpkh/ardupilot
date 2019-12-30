@@ -34,7 +34,7 @@
 #endif
 
 #ifndef HAL_DEFAULT_INS_FAST_SAMPLE
-#define HAL_DEFAULT_INS_FAST_SAMPLE 0
+#define HAL_DEFAULT_INS_FAST_SAMPLE 1
 #endif
 
 extern const AP_HAL::HAL& hal;
@@ -867,7 +867,7 @@ AP_InertialSensor::detect_backends(void)
 #endif
 
     if (_backend_count == 0) {
-        AP_BoardConfig::sensor_config_error("INS: unable to initialise driver");
+        AP_BoardConfig::config_error("INS: unable to initialise driver");
     }
 }
 

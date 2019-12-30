@@ -94,7 +94,8 @@ class VehicleInfo(object):
             },
             "airsim-copter": {
                 "waf_target": "bin/arducopter",
-                "default_params_filename": "default_params/copter.parm",
+                "default_params_filename": ["default_params/copter.parm",
+                                            "default_params/airsim-quadX.parm"],
             },
             # HELICOPTER
             "heli": {
@@ -263,6 +264,10 @@ class VehicleInfo(object):
             "vectored": {
                 "waf_target": "bin/ardusub",
                 "default_params_filename": "default_params/sub.parm",
+            },
+            "vectored_6dof": {
+                "waf_target": "bin/ardusub",
+                "default_params_filename": "default_params/sub-6dof.parm",
             },
             "gazebo-bluerov2": {
                 "waf_target": "bin/ardusub",

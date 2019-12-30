@@ -7,6 +7,7 @@
 #include <AP_Scheduler/AP_Scheduler.h>
 #include <AP_Baro/AP_Baro.h>
 #include <AP_AHRS/AP_AHRS.h>
+#include <AP_GPS/AP_GPS.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -38,7 +39,14 @@ void GCS::send_textv(MAV_SEVERITY severity, const char *fmt, va_list arg_list)
 {
     char text[MAVLINK_MSG_STATUSTEXT_FIELD_TEXT_LEN+1];
     hal.util->vsnprintf(text, sizeof(text), fmt, arg_list);
-    send_statustext(severity, GCS_MAVLINK::active_channel_mask() | GCS_MAVLINK::streaming_channel_mask(), text);
+    uint8_t mask = GCS_MAVLINK::active_channel_mask() | GCS_MAVLINK::streaming_channel_mask();
+    if (!update_send_has_been_called) {
+        // we have not yet initialised the streaming-channel-mask,
+        // which is done as part of the update() call.  So just send
+        // it to all channels:
+        mask = (1<<_num_gcs)-1;
+    }
+    send_statustext(severity, mask, text);
 }
 
 void GCS::send_text(MAV_SEVERITY severity, const char *fmt, ...)
@@ -60,7 +68,7 @@ void GCS::send_to_active_channels(uint32_t msgid, const char *pkt)
         if (!c.is_active()) {
             continue;
         }
-        if (entry->max_msg_len + c.packet_overhead() > c.get_uart()->txspace()) {
+        if (entry->max_msg_len + c.packet_overhead() > c.txspace()) {
             // no room on this channel
             continue;
         }
@@ -132,6 +140,15 @@ void GCS::update_sensor_status_flags()
         control_sensors_health |= MAV_SYS_STATUS_SENSOR_ABSOLUTE_PRESSURE;
     }
 
+    const AP_GPS &gps = AP::gps();
+    if (gps.status() > AP_GPS::NO_GPS) {
+        control_sensors_present |= MAV_SYS_STATUS_SENSOR_GPS;
+        control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_GPS;
+    }
+    if (gps.is_healthy() && gps.status() >= min_status_for_gps_healthy()) {
+        control_sensors_health |= MAV_SYS_STATUS_SENSOR_GPS;
+    }
+
     const AP_BattMonitor &battery = AP::battery();
     control_sensors_present |= MAV_SYS_STATUS_SENSOR_BATTERY;
     if (battery.num_instances() > 0) {
@@ -155,13 +172,13 @@ void GCS::update_sensor_status_flags()
     }
 
     const AP_Logger &logger = AP::logger();
-    if (logger.logging_present()) {  // primary logging only (usually File)
+    if (logger.logging_present() || gps.logging_present()) {  // primary logging only (usually File)
         control_sensors_present |= MAV_SYS_STATUS_LOGGING;
     }
-    if (logger.logging_enabled()) {
+    if (logger.logging_enabled() || gps.logging_enabled()) {
         control_sensors_enabled |= MAV_SYS_STATUS_LOGGING;
     }
-    if (!logger.logging_failed()) {
+    if (!logger.logging_failed() && !gps.logging_failed()) {
         control_sensors_health |= MAV_SYS_STATUS_LOGGING;
     }
 
@@ -204,7 +221,7 @@ bool GCS::out_of_time() const
     }
 
     // we always want to be able to send messages out while in the error loop:
-    if (AP_BoardConfig::in_sensor_config_error()) {
+    if (AP_BoardConfig::in_config_error()) {
         return false;
     }
 

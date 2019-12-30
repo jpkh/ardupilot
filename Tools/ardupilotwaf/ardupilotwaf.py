@@ -25,6 +25,7 @@ COMMON_VEHICLE_DEPENDENT_LIBRARIES = [
     'AP_Baro',
     'AP_BattMonitor',
     'AP_BoardConfig',
+    'AP_Camera',
     'AP_Common',
     'AP_Compass',
     'AP_Declination',
@@ -68,6 +69,8 @@ COMMON_VEHICLE_DEPENDENT_LIBRARIES = [
     'AP_SBusOut',
     'AP_IOMCU',
     'AP_Parachute',
+    'AP_PiccoloCAN',
+    'AP_PiccoloCAN/piccolo_protocol',
     'AP_RAMTRON',
     'AP_RCProtocol',
     'AP_Radio',
@@ -87,6 +90,9 @@ COMMON_VEHICLE_DEPENDENT_LIBRARIES = [
     'AP_NMEA_Output',
     'AP_Filesystem',
     'AP_ADSB',
+    'AC_PID',
+    'AP_SerialLED',
+    'AP_EFI',
 ]
 
 def get_legacy_defines(sketch_name):

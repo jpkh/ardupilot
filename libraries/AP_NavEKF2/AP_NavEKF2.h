@@ -28,7 +28,6 @@
 #include <AP_NavEKF/AP_Nav_Common.h>
 #include <AP_Airspeed/AP_Airspeed.h>
 #include <AP_Compass/AP_Compass.h>
-#include <AP_RangeFinder/AP_RangeFinder.h>
 #include <AP_Logger/LogStructure.h>
 
 class NavEKF2_core;
@@ -38,7 +37,7 @@ class NavEKF2 {
     friend class NavEKF2_core;
 
 public:
-    NavEKF2(const AP_AHRS *ahrs, const RangeFinder &rng);
+    NavEKF2(const AP_AHRS *ahrs);
 
     /* Do not allow copies */
     NavEKF2(const NavEKF2 &other) = delete;
@@ -290,7 +289,7 @@ public:
     void  getFilterStatus(int8_t instance, nav_filter_status &status) const;
 
     // send an EKF_STATUS_REPORT message to GCS
-    void send_status_report(mavlink_channel_t chan);
+    void send_status_report(mavlink_channel_t chan) const;
 
     // provides the height limit to be observed by the control loops
     // returns false if no height limiting is required
@@ -359,8 +358,8 @@ private:
     uint8_t num_cores; // number of allocated cores
     uint8_t primary;   // current primary core
     NavEKF2_core *core = nullptr;
+    bool core_malloc_failed;
     const AP_AHRS *_ahrs;
-    const RangeFinder &_rng;
 
     uint32_t _frameTimeUsec;        // time per IMU frame
     uint8_t  _framesPerPrediction;  // expected number of IMU frames per prediction
@@ -493,6 +492,26 @@ private:
     // time of last lane switch
     uint32_t lastLaneSwitch_ms;
 
+    enum class InitFailures {
+        UNKNOWN,
+        NO_ENABLE, 
+        NO_IMUS, 
+        NO_MASK, 
+        NO_MEM, 
+        NO_SETUP,
+        NUM_INIT_FAILURES
+    };
+    // initialization failure reasons
+    const char* initFailureReason[int(InitFailures::NUM_INIT_FAILURES)] {
+        "EKF2: unknown initialization failure",
+        "EKF2: EK2_enable is false",
+        "EKF2: no IMUs available",
+        "EKF2: EK2_IMU_MASK is zero",
+        "EKF2: insufficient memory available",
+        "EKF2: core setup failed"
+    };
+    InitFailures initFailure;
+
     // update the yaw reset data to capture changes due to a lane switch
     // new_primary - index of the ekf instance that we are about to switch to as the primary
     // old_primary - index of the ekf instance that we are currently using as the primary
@@ -509,11 +528,11 @@ private:
     void updateLaneSwitchPosDownResetData(uint8_t new_primary, uint8_t old_primary);
 
     // logging functions shared by cores:
-    void Log_Write_EKF1(uint8_t core, LogMessages msg_id, uint64_t time_us) const;
-    void Log_Write_NKF2(uint8_t core, LogMessages msg_id, uint64_t time_us) const;
-    void Log_Write_NKF3(uint8_t core, LogMessages msg_id, uint64_t time_us) const;
-    void Log_Write_NKF4(uint8_t core, LogMessages msg_id, uint64_t time_us) const;
+    void Log_Write_NKF1(uint8_t core, uint64_t time_us) const;
+    void Log_Write_NKF2(uint8_t core, uint64_t time_us) const;
+    void Log_Write_NKF3(uint8_t core, uint64_t time_us) const;
+    void Log_Write_NKF4(uint8_t core, uint64_t time_us) const;
     void Log_Write_NKF5(uint64_t time_us) const;
-    void Log_Write_Quaternion(uint8_t core, LogMessages msg_id, uint64_t time_us) const;
+    void Log_Write_Quaternion(uint8_t core, uint64_t time_us) const;
     void Log_Write_Beacon(uint64_t time_us) const;
 };

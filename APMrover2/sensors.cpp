@@ -1,6 +1,6 @@
 #include "Rover.h"
 
-#include <AP_RangeFinder/RangeFinder_Backend.h>
+#include <AP_RangeFinder/AP_RangeFinder_Backend.h>
 #include <AP_VisualOdom/AP_VisualOdom.h>
 
 // check for new compass data - 10Hz
@@ -18,18 +18,6 @@ void Rover::compass_save() {
         !arming.is_armed()) {
         compass.save_offsets();
     }
-}
-
-// init beacons used for non-gps position estimates
-void Rover::init_beacon()
-{
-    g2.beacon.init();
-}
-
-// init visual odometry sensor
-void Rover::init_visual_odom()
-{
-    g2.visual_odom.init();
 }
 
 // update wheel encoders
@@ -117,12 +105,6 @@ void Rover::read_rangefinders(void)
 {
     rangefinder.update();
     Log_Write_Depth();
-}
-
-// initialise proximity sensor
-void Rover::init_proximity(void)
-{
-    g2.proximity.init();
 }
 
 /*

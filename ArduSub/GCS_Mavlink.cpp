@@ -62,7 +62,7 @@ uint32_t GCS_Sub::custom_mode() const
     return sub.control_mode;
 }
 
-MAV_STATE GCS_MAVLINK_Sub::system_status() const
+MAV_STATE GCS_MAVLINK_Sub::vehicle_system_status() const
 {
     // set system as critical if any failsafe have triggered
     if (sub.any_failsafe_triggered())  {
@@ -446,11 +446,11 @@ MAV_RESULT GCS_MAVLINK_Sub::handle_command_do_set_roi(const Location &roi_loc)
     return MAV_RESULT_ACCEPTED;
 }
 
-bool GCS_MAVLINK_Sub::set_home_to_current_location(bool lock) {
-    return sub.set_home_to_current_location(lock);
+bool GCS_MAVLINK_Sub::set_home_to_current_location(bool _lock) {
+    return sub.set_home_to_current_location(_lock);
 }
-bool GCS_MAVLINK_Sub::set_home(const Location& loc, bool lock) {
-    return sub.set_home(loc, lock);
+bool GCS_MAVLINK_Sub::set_home(const Location& loc, bool _lock) {
+    return sub.set_home(loc, _lock);
 }
 
 
@@ -659,8 +659,10 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
         mavlink_set_position_target_global_int_t packet;
         mavlink_msg_set_position_target_global_int_decode(&msg, &packet);
 
-        // exit if vehicle is not in Guided mode or Auto-Guided mode
-        if ((sub.control_mode != GUIDED) && !(sub.control_mode == AUTO && sub.auto_mode == Auto_NavGuided)) {
+        // exit if vehicle is not in Guided, Auto-Guided, or Depth Hold modes
+        if ((sub.control_mode != GUIDED)
+            && !(sub.control_mode == AUTO && sub.auto_mode == Auto_NavGuided)
+            && !(sub.control_mode == ALT_HOLD)) {
             break;
         }
 
@@ -674,6 +676,11 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
          * bool yaw_ignore      = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE;
          * bool yaw_rate_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE;
          */
+
+        if (!pos_ignore && sub.control_mode == ALT_HOLD) { // Control only target depth when in ALT_HOLD
+            sub.pos_control.set_alt_target(packet.alt*100);
+            break;
+        }
 
         Vector3f pos_neu_cm;  // position (North, East, Up coordinates) in centimeters
 
@@ -706,11 +713,6 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
             sub.guided_set_destination(pos_neu_cm);
         }
 
-        break;
-    }
-
-    case MAVLINK_MSG_ID_DISTANCE_SENSOR: {
-        sub.rangefinder.handle_msg(msg);
         break;
     }
 
@@ -764,7 +766,6 @@ void GCS_MAVLINK_Sub::handleMessage(const mavlink_message_t &msg)
 uint64_t GCS_MAVLINK_Sub::capabilities() const
 {
     return (MAV_PROTOCOL_CAPABILITY_MISSION_FLOAT |
-            MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT |
             MAV_PROTOCOL_CAPABILITY_MISSION_INT |
             MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_LOCAL_NED |
             MAV_PROTOCOL_CAPABILITY_SET_POSITION_TARGET_GLOBAL_INT |
@@ -837,7 +838,3 @@ int32_t GCS_MAVLINK_Sub::global_position_int_relative_alt() const {
     }
     return GCS_MAVLINK::global_position_int_relative_alt();
 }
-
-// dummy method to avoid linking AFS
-bool AP_AdvancedFailsafe::gcs_terminate(bool should_terminate, const char *reason) { return false; }
-AP_AdvancedFailsafe *AP::advancedfailsafe() { return nullptr; }

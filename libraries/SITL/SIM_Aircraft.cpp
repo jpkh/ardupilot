@@ -55,6 +55,7 @@ Aircraft::Aircraft(const char *frame_str) :
     rate_hz(1200.0f),
     autotest_dir(nullptr),
     frame(frame_str),
+    num_motors(1),
 #if defined(__CYGWIN__) || defined(__CYGWIN64__)
     min_sleep_time(20000)
 #else
@@ -72,6 +73,12 @@ Aircraft::Aircraft(const char *frame_str) :
     // allow for orientation settings, such as with tailsitters
     enum ap_var_type ptype;
     ahrs_orientation = (AP_Int8 *)AP_Param::find("AHRS_ORIENTATION", &ptype);
+
+    enum Rotation imu_rotation = (enum Rotation)ahrs_orientation->get();
+    ahrs_rotation_inv.from_rotation(imu_rotation);
+    ahrs_rotation_inv.transpose();
+    last_imu_rotation = imu_rotation;
+
     terrain = reinterpret_cast<AP_Terrain *>(AP_Param::find_object("TERRAIN_"));
 }
 
@@ -341,8 +348,8 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     fdm.airspeed = airspeed_pitot;
     fdm.battery_voltage = battery_voltage;
     fdm.battery_current = battery_current;
-    fdm.rpm1 = rpm1;
-    fdm.rpm2 = rpm2;
+    fdm.num_motors = num_motors;
+    memcpy(fdm.rpm, rpm, num_motors * sizeof(float));
     fdm.rcin_chan_count = rcin_chan_count;
     fdm.range = range;
     memcpy(fdm.rcin, rcin, rcin_chan_count * sizeof(float));
@@ -370,11 +377,14 @@ void Aircraft::fill_fdm(struct sitl_fdm &fdm)
     if (ahrs_orientation != nullptr) {
         enum Rotation imu_rotation = (enum Rotation)ahrs_orientation->get();
 
+        if (imu_rotation != last_imu_rotation) {
+            ahrs_rotation_inv.from_rotation(imu_rotation);
+            ahrs_rotation_inv.transpose();
+            last_imu_rotation = imu_rotation;
+        }
         if (imu_rotation != ROTATION_NONE) {
             Matrix3f m = dcm;
-            Matrix3f rot;
-            rot.from_rotation(imu_rotation);
-            m = m * rot.transposed();
+            m = m * ahrs_rotation_inv;
 
             m.to_euler(&r, &p, &y);
             fdm.rollDeg  = degrees(r);

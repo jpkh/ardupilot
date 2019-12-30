@@ -195,7 +195,7 @@ struct PACKED log_Sonar {
 void Plane::Log_Write_Sonar()
 {
     uint16_t distance = 0;
-    if (rangefinder.status_orient(ROTATION_PITCH_270) == RangeFinder::RangeFinder_Good) {
+    if (rangefinder.status_orient(ROTATION_PITCH_270) == RangeFinder::Status::Good) {
         distance = rangefinder.distance_cm_orient(ROTATION_PITCH_270);
     }
 
@@ -263,7 +263,7 @@ const struct LogStructure Plane::log_structure[] = {
     { LOG_STATUS_MSG, sizeof(log_Status),
       "STAT", "QBfBBBBBB",  "TimeUS,isFlying,isFlyProb,Armed,Safety,Crash,Still,Stage,Hit", "s--------", "F--------" },
     { LOG_QTUN_MSG, sizeof(QuadPlane::log_QControl_Tuning),
-      "QTUN", "Qffffffeccf", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DCRt,CRt,TMix", "s----mmmnn-", "F----00000-" },
+      "QTUN", "Qffffffeccff", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DCRt,CRt,TMix,Sscl", "s----mmmnn--", "F----00000-0" },
     { LOG_AOA_SSA_MSG, sizeof(log_AOA_SSA),
       "AOA", "Qff", "TimeUS,AOA,SSA", "sdd", "F00" },
     { LOG_PIQR_MSG, sizeof(log_PID), \

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <AP_HAL/AP_HAL.h>
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+
 #include <AP_Math/AP_Math.h>
 #include <GCS_MAVLink/GCS_MAVLink.h>
 #include <AP_Common/Location.h>
@@ -11,6 +15,7 @@
 #include "SIM_Precland.h"
 #include "SIM_Sprayer.h"
 #include "SIM_ToneAlarm.h"
+#include "SIM_EFI_MegaSquirt.h"
 
 namespace SITL {
 
@@ -40,8 +45,8 @@ struct sitl_fdm {
     double airspeed; // m/s
     double battery_voltage; // Volts
     double battery_current; // Amps
-    double rpm1;            // main prop RPM
-    double rpm2;            // secondary RPM
+    uint8_t num_motors;
+    float rpm[12];         // RPM of all motors
     uint8_t rcin_chan_count;
     float  rcin[8];         // RC input 0..1
     double range;           // rangefinder value
@@ -179,6 +184,15 @@ public:
     AP_Int8  baro_count; // number of simulated baros to create
     AP_Int8 gps_hdg_enabled; // enable the output of a NMEA heading HDT sentence
     AP_Int32 loop_delay; // extra delay to add to every loop
+    AP_Float mag_scaling; // scaling factor on first compasses
+
+    // EFI type
+    enum EFIType {
+        EFI_TYPE_NONE = 0,
+        EFI_TYPE_MS = 1,
+    };
+    
+    AP_Int8  efi_type;
 
     // wind control
     enum WindType {
@@ -234,6 +248,9 @@ public:
     // vibration frequencies in Hz on each axis
     AP_Vector3f vibe_freq;
 
+    // hover frequency to use as baseline for adding motor noise for the gyros and accels
+    AP_Float vibe_motor;
+
     // gyro and accel fail masks
     AP_Int8 gyro_fail_mask;
     AP_Int8 accel_fail_mask;
@@ -279,6 +296,19 @@ public:
         AP_Float hdg; // 0 to 360
     } opos;
 
+    AP_Int8 _safety_switch_state;
+
+    AP_HAL::Util::safety_state safety_switch_state() const {
+        return (AP_HAL::Util::safety_state)_safety_switch_state.get();
+    }
+    void force_safety_off() {
+        _safety_switch_state = (uint8_t)AP_HAL::Util::SAFETY_ARMED;
+    }
+    bool force_safety_on() {
+        _safety_switch_state = (uint8_t)AP_HAL::Util::SAFETY_DISARMED;
+        return true;
+    }
+
     uint16_t irlock_port;
 
     void simstate_send(mavlink_channel_t chan);
@@ -302,6 +332,17 @@ public:
     Buzzer buzzer_sim;
     ToneAlarm tonealarm_sim;
     SIM_Precland precland_sim;
+
+    struct {
+        // LED state, for serial LED emulation
+        struct {
+            uint8_t rgb[3];
+        } rgb[16][32];
+        uint8_t num_leds[16];
+        uint32_t send_counter;
+    } led;
+
+    EFI_MegaSquirt efi_ms;
 };
 
 } // namespace SITL
@@ -310,3 +351,5 @@ public:
 namespace AP {
     SITL::SITL *sitl();
 };
+
+#endif // CONFIG_HAL_BOARD

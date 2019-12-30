@@ -106,6 +106,7 @@ public:
     void set_and_save_offsets(uint8_t i, const Vector3f &offsets);
     void set_and_save_diagonals(uint8_t i, const Vector3f &diagonals);
     void set_and_save_offdiagonals(uint8_t i, const Vector3f &diagonals);
+    void set_and_save_scale_factor(uint8_t i, float scale_factor);
 
     /// Saves the current offset x/y/z values for one or all compasses
     ///
@@ -123,6 +124,9 @@ public:
     /// Return the current field as a Vector3f in milligauss
     const Vector3f &get_field(uint8_t i) const { return _state[i].field; }
     const Vector3f &get_field(void) const { return get_field(get_primary()); }
+
+    /// Return true if we have set a scale factor for a compass
+    bool have_scale_factor(uint8_t i) const;
 
     // compass calibrator interface
     void cal_update();
@@ -321,6 +325,12 @@ public:
 
     uint8_t get_filter_range() const { return uint8_t(_filter_range.get()); }
 
+    /*
+      fast compass calibration given vehicle position and yaw
+     */
+    MAV_RESULT mag_cal_fixed_yaw(float yaw_deg, uint8_t compass_mask,
+                                 float lat_deg, float lon_deg);
+
 private:
     static Compass *_singleton;
     /// Register a new compas driver, allocating an instance number
@@ -346,6 +356,12 @@ private:
     // see if we already have probed a i2c driver by bus number and address
     bool _have_i2c_driver(uint8_t bus_num, uint8_t address) const;
 
+    /*
+      get mag field with the effects of offsets, diagonals and
+      off-diagonals removed
+    */
+    bool get_uncorrected_field(uint8_t instance, Vector3f &field);
+    
 #if COMPASS_CAL_ENABLED
     //keep track of which calibrators have been saved
     bool _cal_saved[COMPASS_MAX_INSTANCES];
@@ -431,6 +447,7 @@ private:
         AP_Vector3f offset;
         AP_Vector3f diagonals;
         AP_Vector3f offdiagonals;
+        AP_Float    scale_factor;
 
         // device id detected at init.
         // saved to eeprom when offsets are saved allowing ram &
@@ -466,6 +483,12 @@ private:
     } _state[COMPASS_MAX_INSTANCES];
 
     AP_Int16 _offset_max;
+
+    // bitmask of options
+    enum class Option : uint16_t {
+        CAL_REQUIRE_GPS = (1U<<0),
+    };
+    AP_Int16 _options;
 
 #if COMPASS_CAL_ENABLED
     CompassCalibrator _calibrator[COMPASS_MAX_INSTANCES];

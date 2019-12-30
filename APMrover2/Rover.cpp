@@ -26,7 +26,7 @@
 
    APMrover alpha version tester: Franco Borasio, Daniel Chapelat...
 
-   Please contribute your ideas! See http://dev.ardupilot.org for details
+   Please contribute your ideas! See https://dev.ardupilot.org for details
 */
 
 #include "Rover.h"
@@ -350,5 +350,6 @@ void Rover::publish_osd_info()
 #endif
 
 Rover rover;
+AP_Vehicle& vehicle = rover;
 
 AP_HAL_MAIN_CALLBACKS(&rover);

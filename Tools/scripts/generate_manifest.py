@@ -326,7 +326,7 @@ class ManifestGenerator():
 
                 filepath = os.path.join(some_dir, filename)
                 firmware_format = self.firmware_format_for_filepath(filepath)
-                if firmware_format not in [ "ELF", "abin", "apj", "hex", "px4" ]:
+                if firmware_format not in [ "ELF", "abin", "apj", "hex", "px4", "bin" ]:
                     print("Unknown firmware format (%s)" % firmware_format)
 
                 firmware = Firmware()
@@ -481,7 +481,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='generate manifest.json')
 
     parser.add_argument('--outfile', type=str, default=None, help='output file, default stdout')
-    parser.add_argument('--baseurl', type=str, default="http://firmware.ardupilot.org", help='base binaries directory')
+    parser.add_argument('--baseurl', type=str, default="https://firmware.ardupilot.org", help='base binaries directory')
     parser.add_argument('basedir', type=str, default="-", help='base binaries directory')
 
     args = parser.parse_args()

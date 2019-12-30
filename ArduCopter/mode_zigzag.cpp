@@ -81,13 +81,13 @@ void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
                 dest_A.x = curr_pos.x;
                 dest_A.y = curr_pos.y;
                 gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: point A stored");
-                copter.Log_Write_Event(DATA_ZIGZAG_STORE_A);
+                AP::logger().Write_Event(LogEvent::ZIGZAG_STORE_A);
             } else {
                 // store point B
                 dest_B.x = curr_pos.x;
                 dest_B.y = curr_pos.y;
                 gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: point B stored");
-                copter.Log_Write_Event(DATA_ZIGZAG_STORE_B);
+                AP::logger().Write_Event(LogEvent::ZIGZAG_STORE_B);
             }
             // if both A and B have been stored advance state
             if (!dest_A.is_zero() && !dest_B.is_zero() && is_positive((dest_B - dest_A).length_squared())) {
@@ -123,7 +123,7 @@ void ModeZigZag::return_to_manual_control(bool maintain_target)
         stage = MANUAL_REGAIN;
         loiter_nav->clear_pilot_desired_acceleration();
         if (maintain_target) {
-            const Vector3f wp_dest = wp_nav->get_wp_destination();
+            const Vector3f& wp_dest = wp_nav->get_wp_destination();
             loiter_nav->init_target(wp_dest);
             if (wp_nav->origin_and_destination_are_terrain_alt()) {
                 copter.surface_tracking.set_target_alt_cm(wp_dest.z);
@@ -285,7 +285,7 @@ bool ModeZigZag::calculate_next_dest(uint8_t dest_num, bool use_wpnav_alt, Vecto
         next_dest.z = wp_nav->get_wp_destination().z;
     } else {
         // if we have a downward facing range finder then use terrain altitude targets
-        terrain_alt = copter.rangefinder_alt_ok() && wp_nav->rangefinder_used();
+        terrain_alt = copter.rangefinder_alt_ok() && wp_nav->rangefinder_used_and_healthy();
         if (terrain_alt) {
             if (!copter.surface_tracking.get_target_alt_cm(next_dest.z)) {
                 next_dest.z = copter.rangefinder_state.alt_cm_filt.get();

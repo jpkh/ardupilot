@@ -61,8 +61,8 @@ void AP_Periph_FW::init()
 
     stm32_watchdog_pat();
 
-    hal.uartA->begin(AP_SERIALMANAGER_CONSOLE_BAUD, 32, 128);
-    hal.uartB->begin(115200, 32, 128);
+    hal.uartA->begin(AP_SERIALMANAGER_CONSOLE_BAUD, 32, 32);
+    hal.uartB->begin(115200, 128, 256);
 
     load_parameters();
 
@@ -124,6 +124,10 @@ void AP_Periph_FW::init()
     hal.uartB->begin(g.rangefinder_baud);
     serial_manager.set_protocol_and_baud(sernum, AP_SerialManager::SerialProtocol_Rangefinder, g.rangefinder_baud);
     rangefinder.init(ROTATION_NONE);
+#endif
+
+#ifdef HAL_PERIPH_ENABLE_PWM_HARDPOINT
+    pwm_hardpoint_init();
 #endif
     
     start_ms = AP_HAL::millis();
