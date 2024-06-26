@@ -444,23 +444,21 @@ bool AP_Arming_Copter::mandatory_gps_checks(bool display_failure)
     fence_requires_gps = (copter.fence.get_enabled_fences() & (AC_FENCE_TYPE_CIRCLE | AC_FENCE_TYPE_POLYGON)) > 0;
     #endif
 
-    if (mode_requires_gps) {
+    if (mode_requires_gps || copter.option_is_enabled(Copter::FlightOption::REQUIRE_POSITION_FOR_ARMING)) {
         if (!copter.position_ok()) {
             // vehicle level position estimate checks
             check_failed(display_failure, "Need Position Estimate");
             return false;
         }
-    } else {
-        if (fence_requires_gps) {
-            if (!copter.position_ok()) {
-                // clarify to user why they need GPS in non-GPS flight mode
-                check_failed(display_failure, "Fence enabled, need position estimate");
-                return false;
-            }
-        } else {
-            // return true if GPS is not required
-            return true;
+    } else if (fence_requires_gps) {
+        if (!copter.position_ok()) {
+            // clarify to user why they need GPS in non-GPS flight mode
+            check_failed(display_failure, "Fence enabled, need position estimate");
+            return false;
         }
+    } else {
+        // return true if GPS is not required
+        return true;
     }
 
     // check for GPS glitch (as reported by EKF)
