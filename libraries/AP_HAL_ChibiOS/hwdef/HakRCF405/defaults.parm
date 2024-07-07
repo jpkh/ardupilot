@@ -21,19 +21,21 @@ FLTMODE4 = 2
 FLTMODE6 = 18
 
 # Jumper T14, reverse RC2
-RC2_REVERSED = 1
+RC1_REVERSED = 0
+RC2_REVERSED = 0
+RC4_REVERSED = 0
 
 # Frame class Quad (1), Type BF_X (12)
 FRAME_CLASS = 1
 FRAME_TYPE = 12
 
-# RC Receiver, ELRS 915 as default on Serial 1 port
-SERIAL1_PROTOCOL = 23
+# RC Receiver, ELRS 915 as default on Serial 2 port, that's where the connector is
 RC_PROTOCOLS = 512
+SERIAL2_PROTOCOL = 23
 
 # Disable rest of the serials as default
-SERIAL2_BAUD = 57
-SERIAL2_PROTOCOL = -1
+SERIAL1_BAUD = 57
+SERIAL1_PROTOCOL = -1
 SERIAL3_BAUD = 57
 SERIAL3_PROTOCOL = -1
 SERIAL4_BAUD = 57
