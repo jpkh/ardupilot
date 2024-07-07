@@ -1,5 +1,5 @@
 # hw definition file for processing by chibios_hwdef.py
-# for HAKRCF405 hardware. HK4551 v1.0
+# for HAKRCF405 hardware. HK4350 v2.1
 # thanks to Betaflight for pin information
 
 # MCU class and specific type
@@ -126,10 +126,10 @@ PC9 TIM8_CH4 TIM8 PWM(1) GPIO(50)       # M2 1-A ok for ArduPilot, wrong order f
 PA8 TIM1_CH1 TIM1 PWM(2) GPIO(51)       # M3 2-C ok
 PA9 TIM1_CH2 TIM1 PWM(3) GPIO(52)       # M4 3-D ok
 PC8 TIM8_CH3 TIM8 PWM(4) GPIO(53)       # M1 4-B ok
-PA10 TIM1_CH3 TIM1 PWM(5) GPIO(54)      # M5
-PB4 TIM3_CH1 TIM3 PWM(6) GPIO(55)       # M6
-PB0 TIM3_CH3 TIM3 PWM(7) GPIO(56)       # M7
-PB1 TIM3_CH4 TIM3 PWM(8) GPIO(57) BIDIR # M8
+PA10 TIM1_CH3 TIM1 PWM(5) GPIO(54)      # M5 + Order not checked
+PB4 TIM3_CH1 TIM3 PWM(6) GPIO(55)       # M6 |
+PB0 TIM3_CH3 TIM3 PWM(7) GPIO(56)       # M7 |
+PB1 TIM3_CH4 TIM3 PWM(8) GPIO(57) BIDIR # M8 |
 
 
 # LEDs
@@ -140,7 +140,7 @@ define HAL_GPIO_A_LED_PIN 0
 define HAL_GPIO_B_LED_PIN 1
 
 # LED Strip, PB3, Not defined yet
-# PB3
+PB3 TIM2_CH2 TIM2 PWM(9) GPIO(58)
 
 # SPI Devices
 SPIDEV imu1      SPI1 DEVID1 GYRO1_CS   MODE3   1*MHZ   8*MHZ
@@ -148,7 +148,7 @@ SPIDEV osd       SPI2 DEVID1 OSD1_CS    MODE0  10*MHZ  10*MHZ
 SPIDEV dataflash SPI3 DEVID1 FLASH1_CS  MODE3 104*MHZ 104*MHZ
 
 # Dataflash setup
-define HAL_LOGGING_DATAFLASH_ENABLED 0
+define HAL_LOGGING_DATAFLASH_ENABLED 1
 
 # OSD setup
 define OSD_ENABLED 1

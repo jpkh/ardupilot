@@ -1,0 +1,59 @@
+# Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
+#
+
+ARMING_CHECK = 498
+
+COMPASS_ENABLE = 0
+COMPASS_USE = 0
+COMPASS_USE2 = 0
+COMPASS_USE3 = 0
+
+# Most radios Ch 7 is 3-way swtich. We could use Ch5 as default
+# but in Betaflight that is used for Arm/Disarm motors. 
+FLTMODE_CH = 7
+# First flight mode always Stabile (0)
+FLTMODE1 = 0
+
+# Second flight mode Alt Hold (2)
+FLTMODE4 = 2
+
+# Flight mode 6 either Throw (18) or Sport (13)
+FLTMODE6 = 18
+
+# Jumper T14, reverse RC2
+RC2_REVERSED = 1
+
+# Frame class Quad (1), Type BF_X (12)
+FRAME_CLASS = 1
+FRAME_TYPE = 12
+
+# RC Receiver, ELRS 915 as default on Serial 1 port
+SERIAL1_PROTOCOL = 23
+RC_PROTOCOLS = 512
+
+# Disable rest of the serials as default
+SERIAL2_BAUD = 57
+SERIAL2_PROTOCOL = -1
+SERIAL3_BAUD = 57
+SERIAL3_PROTOCOL = -1
+SERIAL4_BAUD = 57
+SERIAL4_PROTOCOL = -1
+SERIAL5_BAUD = 57
+SERIAL5_PROTOCOL = -1
+SERIAL6_BAUD = 57
+SERIAL6_PROTOCOL = -1
+
+
+# OSD Settings
+# This is an FPVCopter setup, no GPS, Compass on board as default
+# User can activate settings later if needed. 
+
+# No GPS LAT/LON, Speed, HDOP
+OSD1_GPSLAT_EN = 0
+OSD1_GPSLONG_EN = 0
+OSD1_GSPEED_EN = 0
+OSD1_HDOP_EN = 0
+OSD1_SATS_EN = 0
+
+OSD1_VTX_PWR_EN = 1
+

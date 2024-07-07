@@ -18,6 +18,9 @@ FLASH_RESERVE_START_KB 0
 # the location where the bootloader will put the firmware
 FLASH_BOOTLOADER_LOAD_KB 48
 
+# USB Setup
+USB_STRING_MANUFACTURER "HakRC"
+
 # order of UARTs (and USB)
 SERIAL_ORDER OTG1
 
