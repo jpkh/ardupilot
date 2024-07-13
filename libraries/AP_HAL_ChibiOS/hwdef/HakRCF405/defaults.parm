@@ -46,7 +46,7 @@ SERIAL4_BAUD = 57
 SERIAL4_PROTOCOL = -1
 SERIAL5_BAUD = 57
 SERIAL5_PROTOCOL = -1
-SERIAL6_BAUD = 57
+SERIAL6_BAUD = 36
 SERIAL6_PROTOCOL = -1
 
 ###############################################
@@ -82,4 +82,19 @@ NTF_LED_BRIGHT = 2
 ###############################################
 # Battery monitor 
 # Generic settings for the battery monitor
+BATT_MONITOR = 4
+BATT_VOLT_MULT = 10.9
 BATT_CAPACITY = 5000
+
+
+# F405 Flightcontrollers like this HAKRCF405 are meant to fly FPVCopters
+# They are small, we need to lowerdown some initial settings for users to start tuning
+# These values are 50% from original and works quite well 10" FPVCopter.
+ATC_RAT_PIT_P = 0.075
+ATC_RAT_PIT_I = 0.075
+ATC_RAT_PIT_D = 0.0018
+ATC_RAT_RLL_P = 0.075
+ATC_RAT_RLL_I = 0.075
+ATC_RAT_RLL_D = 0.0018
+
+
