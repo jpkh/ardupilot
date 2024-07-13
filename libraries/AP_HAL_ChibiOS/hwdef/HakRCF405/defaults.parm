@@ -1,5 +1,6 @@
 # Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
-#
+# Developed by : Jani Hirvinen https://github.com/jpkh
+# Version      : v1.0, 13.07.2024
 
 ARMING_CHECK = 498
 
@@ -25,10 +26,13 @@ RC1_REVERSED = 0
 RC2_REVERSED = 0
 RC4_REVERSED = 0
 
+###############################################
 # Frame class Quad (1), Type BF_X (12)
 FRAME_CLASS = 1
 FRAME_TYPE = 12
 
+###############################################
+# Serial ports 
 # RC Receiver, ELRS 915 as default on Serial 2 port, that's where the connector is
 RC_PROTOCOLS = 512
 SERIAL2_PROTOCOL = 23
@@ -45,7 +49,7 @@ SERIAL5_PROTOCOL = -1
 SERIAL6_BAUD = 57
 SERIAL6_PROTOCOL = -1
 
-
+###############################################
 # OSD Settings
 # This is an FPVCopter setup, no GPS, Compass on board as default
 # User can activate settings later if needed. 
@@ -59,3 +63,23 @@ OSD1_SATS_EN = 0
 
 OSD1_VTX_PWR_EN = 1
 
+###############################################
+# Info leds and NeoPixel (4 x SK6812 onboard)
+
+# NeoPixed output on PWM9
+SERVO9_FUNCTION = 120
+
+# Only have built-in and NeoPixels
+NTF_LED_TYPES = 257 
+
+# 4 x SK6812 Leds on board
+NTF_LED_LEN = 4
+
+# We dont want them to be too bright so..
+NTF_LED_BRIGHT = 2
+
+
+###############################################
+# Battery monitor 
+# Generic settings for the battery monitor
+BATT_CAPACITY = 5000

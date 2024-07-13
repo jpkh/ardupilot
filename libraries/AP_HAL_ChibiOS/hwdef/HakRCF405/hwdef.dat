@@ -1,6 +1,17 @@
+# Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
 # hw definition file for processing by chibios_hwdef.py
-# for HAKRCF405 hardware. HK4350 v2.1
+#
+# Board        : HAKRCF405, HK4350 v2.1
+# Developed by : Jani Hirvinen https://github.com/jpkh
+# Version      : v1.0, 13.07.2024
+#
 # thanks to Betaflight for pin information
+
+# Generic details of the board
+# PB3 - Onboard "LED Strip", 4 x SK6812 leds on board
+
+# Currently unused known pins
+# PC5 - Resource pin, VTX control
 
 # MCU class and specific type
 MCU STM32F4xx STM32F405xx
@@ -63,14 +74,14 @@ PA11 OTG_FS_DM OTG1
 PA12 OTG_FS_DP OTG1
 
 # USART1
-PB7 USART1_RX USART1 # NODMA
-PB6 USART1_TX USART1 # NODMA
-DEFAULT_SERIAL1_PROTOCOL SerialProtocol_RCIN
+PB7 USART1_RX USART1 NODMA
+PB6 USART1_TX USART1 NODMA
+DEFAULT_SERIAL1_PROTOCOL SerialProtocol_GPS
 
 # USART2 (SBUS/INVETER)
-PA3 USART2_RX USART2 NODMA
-PA2 USART2_TX USART2 NODMA
-DEFAULT_SERIAL2_PROTOCOL SerialProtocol_None
+PA3 USART2_RX USART2 # NODMA
+PA2 USART2_TX USART2 # NODMA
+DEFAULT_SERIAL2_PROTOCOL SerialProtocol_RCIN
 
 # USART3
 PB10 USART3_TX USART3
@@ -90,7 +101,7 @@ DEFAULT_SERIAL5_PROTOCOL SerialProtocol_None
 # USART6 (RCIN)
 PC6 USART6_TX USART6
 PC7 USART6_RX USART6
-DEFAULT_SERIAL6_PROTOCOL SerialProtocol_GPS
+DEFAULT_SERIAL6_PROTOCOL SerialProtocol_None
 
 # I2C ports
 I2C_ORDER I2C1
@@ -114,18 +125,24 @@ PC3 BATT_CURRENT_SENS ADC1 SCALE(1)
 # ADC Scalers and pins
 define BOARD_RSSI_ANA_PIN 10
 
-define HAL_BATT_CURR_PIN 12
+define HAL_BATT_CURR_PIN 11
 define HAL_BATT_CURR_SCALE 10.0
 
-define HAL_BATT_VOLT_PIN 13
-define HAL_BATT_VOLT_SCALE 11.0
+define HAL_BATT_VOLT_PIN 12
+define HAL_BATT_VOLT_SCALE 10.8
 
+# SCH                Motor orders 
+# M1 PC8           BG Quad   AP Quad 
+# M2 PC9            4   2     3   1
+# M3 PA8            3   1     2   4
+# M4 PA9
 
-# MOTORS
-PC9 TIM8_CH4 TIM8 PWM(1) GPIO(50)       # M2 1-A ok for ArduPilot, wrong order for BF setup
-PA8 TIM1_CH1 TIM1 PWM(2) GPIO(51)       # M3 2-C ok
-PA9 TIM1_CH2 TIM1 PWM(3) GPIO(52)       # M4 3-D ok
-PC8 TIM8_CH3 TIM8 PWM(4) GPIO(53)       # M1 4-B ok
+# MOTORS                                      FRM12   FRM1
+PC8 TIM8_CH3 TIM8 PWM(1) GPIO(50)       # M1    B      A
+PC9 TIM8_CH4 TIM8 PWM(2) GPIO(51) BIDIR # M2    A      C
+PA8 TIM1_CH1 TIM1 PWM(3) GPIO(52) BIDIR # M3    C      D
+PA9 TIM1_CH2 TIM1 PWM(4) GPIO(53)       # M4    D      B
+
 PA10 TIM1_CH3 TIM1 PWM(5) GPIO(54)      # M5 + Order not checked
 PB4 TIM3_CH1 TIM3 PWM(6) GPIO(55)       # M6 |
 PB0 TIM3_CH3 TIM3 PWM(7) GPIO(56)       # M7 |
