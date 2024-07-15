@@ -46,7 +46,7 @@ SERIAL4_BAUD = 57
 SERIAL4_PROTOCOL = -1
 SERIAL5_BAUD = 57
 SERIAL5_PROTOCOL = -1
-SERIAL6_BAUD = 36
+SERIAL6_BAUD = 38
 SERIAL6_PROTOCOL = -1
 
 ###############################################
@@ -62,6 +62,19 @@ OSD1_HDOP_EN = 0
 OSD1_SATS_EN = 0
 
 OSD1_VTX_PWR_EN = 1
+
+# Modify OSD1 page from defaults. 
+OSD1_MESSAGE_Y = 12
+OSD1_BATTBAR_X = 11
+OSD1_BATTBAR_Y = 12
+OSD1_CELLVOLT_EN = 0
+OSD1_HOMEDIR_EN = 0
+OSD1_HOMEDIST_EN = 0
+OSD1_POWER_EN = 0
+OSD1_POWER_X = 2
+OSD1_POWER_Y = 9
+
+
 
 ###############################################
 # Info leds and NeoPixel (4 x SK6812 onboard)
