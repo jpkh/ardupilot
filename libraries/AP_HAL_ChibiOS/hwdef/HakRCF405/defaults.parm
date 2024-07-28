@@ -1,5 +1,5 @@
 # Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
-# Developed by : Jani Hirvinen https://github.com/jpkh
+# Created by   : Jani Hirvinen https://github.com/jpkh
 # Version      : v1.0, 13.07.2024
 
 ARMING_CHECK = 498

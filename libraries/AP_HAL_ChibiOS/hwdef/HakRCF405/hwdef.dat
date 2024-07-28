@@ -2,16 +2,13 @@
 # hw definition file for processing by chibios_hwdef.py
 #
 # Board        : HAKRCF405, HK4350 v2.1
-# Developed by : Jani Hirvinen https://github.com/jpkh
+# Created by   : Jani Hirvinen https://github.com/jpkh
 # Version      : v1.0, 13.07.2024
 #
 # thanks to Betaflight for pin information
 
 # Generic details of the board
 # PB3 - Onboard "LED Strip", 4 x SK6812 leds on board
-
-# Currently unused known pins
-# PC5 - Resource pin, VTX control
 
 # MCU class and specific type
 MCU STM32F4xx STM32F405xx
