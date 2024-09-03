@@ -1,0 +1,113 @@
+# Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
+# Created by   : Jani Hirvinen https://github.com/jpkh
+# Version      : v1.0, 13.07.2024
+
+ARMING_CHECK = 498
+
+COMPASS_ENABLE = 0
+COMPASS_USE = 0
+COMPASS_USE2 = 0
+COMPASS_USE3 = 0
+
+# Most radios Ch 7 is 3-way swtich. We could use Ch5 as default
+# but in Betaflight that is used for Arm/Disarm motors. 
+FLTMODE_CH = 7
+# First flight mode always Stabile (0)
+FLTMODE1 = 0
+
+# Second flight mode Alt Hold (2)
+FLTMODE4 = 2
+
+# Flight mode 6 either Throw (18) or Sport (13)
+FLTMODE6 = 18
+
+# Jumper T14, reverse RC2
+RC1_REVERSED = 0
+RC2_REVERSED = 0
+RC4_REVERSED = 0
+
+###############################################
+# Frame class Quad (1), Type BF_X (12)
+FRAME_CLASS = 1
+FRAME_TYPE = 12
+
+###############################################
+# Serial ports 
+# RC Receiver, ELRS 915 as default on Serial 2 port, that's where the connector is
+RC_PROTOCOLS = 512
+SERIAL2_PROTOCOL = 23
+
+# Disable rest of the serials as default
+SERIAL1_BAUD = 57
+SERIAL1_PROTOCOL = -1
+SERIAL3_BAUD = 57
+SERIAL3_PROTOCOL = -1
+SERIAL4_BAUD = 57
+SERIAL4_PROTOCOL = -1
+SERIAL5_BAUD = 57
+SERIAL5_PROTOCOL = -1
+SERIAL6_BAUD = 38
+SERIAL6_PROTOCOL = -1
+
+###############################################
+# OSD Settings
+# This is an FPVCopter setup, no GPS, Compass on board as default
+# User can activate settings later if needed. 
+
+# No GPS LAT/LON, Speed, HDOP
+OSD1_GPSLAT_EN = 0
+OSD1_GPSLONG_EN = 0
+OSD1_GSPEED_EN = 0
+OSD1_HDOP_EN = 0
+OSD1_SATS_EN = 0
+
+OSD1_VTX_PWR_EN = 1
+
+# Modify OSD1 page from defaults. 
+OSD1_MESSAGE_Y = 12
+OSD1_BATTBAR_X = 11
+OSD1_BATTBAR_Y = 12
+OSD1_CELLVOLT_EN = 0
+OSD1_HOMEDIR_EN = 0
+OSD1_HOMEDIST_EN = 0
+OSD1_POWER_EN = 0
+OSD1_POWER_X = 2
+OSD1_POWER_Y = 9
+
+
+
+###############################################
+# Info leds and NeoPixel (4 x SK6812 onboard)
+
+# NeoPixed output on PWM9
+SERVO9_FUNCTION = 120
+
+# Only have built-in and NeoPixels
+NTF_LED_TYPES = 257 
+
+# 4 x SK6812 Leds on board
+NTF_LED_LEN = 4
+
+# We dont want them to be too bright so..
+NTF_LED_BRIGHT = 2
+
+
+###############################################
+# Battery monitor 
+# Generic settings for the battery monitor
+BATT_MONITOR = 4
+BATT_VOLT_MULT = 10.9
+BATT_CAPACITY = 5000
+
+
+# F405 Flightcontrollers like this HAKRCF405 are meant to fly FPVCopters
+# They are small, we need to lowerdown some initial settings for users to start tuning
+# These values are 50% from original and works quite well 10" FPVCopter.
+ATC_RAT_PIT_P = 0.075
+ATC_RAT_PIT_I = 0.075
+ATC_RAT_PIT_D = 0.0018
+ATC_RAT_RLL_P = 0.075
+ATC_RAT_RLL_I = 0.075
+ATC_RAT_RLL_D = 0.0018
+
+
