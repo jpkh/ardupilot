@@ -42,7 +42,7 @@ define CH_CFG_ST_RESOLUTION 32
 
 # USB Setup
 USB_STRING_MANUFACTURER "HakRC"
-USB_STRING_PRODUCT "HAKF405Wing"
+USB_STRING_PRODUCT "HAKF405Wing v1.0"
 
 
 # SPI devices
@@ -122,11 +122,10 @@ I2C_ORDER I2C1
 PB8 I2C1_SCL I2C1
 PB9 I2C1_SDA I2C1
 
-
 # Barometic
 # SPL06 on HakRC F405 Multicopter-FC and Wing-FC
 BARO SPL06 I2C:0:0x76      
-#BARO BMP280 I2C:0:0x76
+BARO BMP280 I2C:0:0x76
 
 # Servos
 
@@ -176,7 +175,6 @@ define HAL_GPIO_B_LED_PIN 1
 
 # LED Strip, PA8, Not defined yet
 PA8 TIM1_CH1 TIM1 PWM(12) GPIO(61) 
-# PA8 timer issues
 
 # This board does not have VTX control, it is always powered
 # We keep this here for future expansions
@@ -196,7 +194,7 @@ define HAL_OSD_TYPE_DEFAULT 1
 ROMFS_WILDCARD libraries/AP_OSD/fonts/font*.bin
 
 # IMU setup
-# IMU on top side of the PCB, ICM marker pointing forward. 
+# IMU on top side of the PCB, ICM marker pointing towards back. 
 IMU Invensensev3 SPI:imu1 ROTATION_ROLL_180_YAW_270
 DMA_PRIORITY TIM3* TIM2* TIM8_UP SPI1* TIM1_UP
 
@@ -208,7 +206,8 @@ define HAL_I2C_INTERNAL_MASK 0
 define HAL_COMPASS_AUTO_ROT_DEFAULT 2
 define HAL_DEFAULT_INS_FAST_SAMPLE 3
 
+define NTF_LED_LEN 4
+
 include ../include/minimize_fpv_osd.inc
 
-define NTF_LED_LEN 4
 

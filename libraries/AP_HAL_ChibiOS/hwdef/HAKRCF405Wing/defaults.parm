@@ -1,4 +1,4 @@
-# Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
+# Defaults for HaKRCF405Wing v1.0
 # Created by   : Jani Hirvinen https://github.com/jpkh
 # Version      : v1.0, 13.07.2024
 
@@ -9,41 +9,42 @@
 #COMPASS_USE2 = 0
 #COMPASS_USE3 = 0
 
-# Most radios Ch 7 is 3-way swtich. We could use Ch5 as default
+# Most radios Ch 6 is 3-way swtich. We could use Ch5 as default
 # but in Betaflight that is used for Arm/Disarm motors. 
-FLTMODE_CH = 7
+FLTMODE_CH = 6
 # First flight mode always Stabile (0)
 FLTMODE1 = 0
 
-# Second flight mode Alt Hold (2)
-#FLTMODE4 = 2
+# Second flight mode Alt HoldStabilize (2)
+FLTMODE4 = 2
 
-# Flight mode 6 either Throw (18) or Sport (13)
-#FLTMODE6 = 18
+# Flight mode 6 either FBWA (5)
+FLTMODE6 = 5
 
-# Jumper T14, reverse RC2
-##RC1_REVERSED = 0
-##RC2_REVERSED = 0
-##RC4_REVERSED = 0
+# Reverse RC2. Applies to most of the RC Trasmitters. 
+#RC1_REVERSED = 0
+RC2_REVERSED = 1
+#RC4_REVERSED = 0
 
 ###############################################
-# Frame class Quad (1), Type BF_X (12)
-#FRAME_CLASS = 1
-#FRAME_TYPE = 12
+# Frame class: fixedwing, no frame type / class
+#FRAME_CLASS = 0
+#FRAME_TYPE = 0
 
 ###############################################
 # Serial ports 
-# RC Receiver, ELRS 915 as default on Serial 2 port, that's where the connector is
+# RC Receiver, ELRS 915/2.4Ghz as default on Serial 1 port, that's where the connector is
 RC_PROTOCOLS = 512
-SERIAL2_PROTOCOL = 23
+SERIAL1_BAUD = 115
+SERIAL1_PROTOCOL = 23
 
-# Disable rest of the serials as default
-#SERIAL1_BAUD = 57
-#SERIAL1_PROTOCOL = -1
-#SERIAL3_BAUD = 57
-#SERIAL3_PROTOCOL = -1
-#SERIAL4_BAUD = 57
-#SERIAL4_PROTOCOL = -1
+# Other ports as follows, these can be changed in the GCS
+SERIAL2_BAUD = 57
+SERIAL2_PROTOCOL = 2
+SERIAL3_BAUD = 57
+SERIAL3_PROTOCOL = 2
+SERIAL4_BAUD = 230
+SERIAL4_PROTOCOL = 5 
 #SERIAL5_BAUD = 57
 #SERIAL5_PROTOCOL = -1
 #SERIAL6_BAUD = 38
@@ -96,19 +97,15 @@ NTF_LED_BRIGHT = 2
 # Battery monitor 
 # Generic settings for the battery monitor
 BATT_MONITOR = 4
-BATT_VOLT_MULT = 10.9
+
+# Bat volt multiplier is rather high but quite accurate.
+# tested with lab powers output 14.2v while flightcontroller
+# reading is 14.18v. Users need to change this to match their 
+# measured values. 
+BATT_VOLT_MULT = 550
+
+
+# Default battery, users need to change this on their settings
 BATT_CAPACITY = 5000
-
-
-# F405 Flightcontrollers like this HAKRCF405 are meant to fly FPVCopters
-# They are small, we need to lowerdown some initial settings for users to start tuning
-# These values are 50% from original and works quite well 10" FPVCopter.
-
-##ATC_RAT_PIT_P = 0.075
-##ATC_RAT_PIT_I = 0.075
-##ATC_RAT_PIT_D = 0.0018
-##ATC_RAT_RLL_P = 0.075
-##ATC_RAT_RLL_I = 0.075
-##ATC_RAT_RLL_D = 0.0018
 
 
