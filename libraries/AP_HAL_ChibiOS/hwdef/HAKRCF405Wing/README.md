@@ -28,8 +28,8 @@ receive pin for UARTn. The Tn pin is the transmit pin for UARTn.
 |SERIAL2|RX2/TX2|UART2 (Serial / RX2 Shared with SBUS) |
 |SERIAL3|TX3/RX3|UART3 (Telemetry)
 |SERIAL4|TX4/RX4|UART4 (DJI)|
-|SERIAL5|RX5|UART5 |
-|SERIAL6|RX6|UART6 |
+|SERIAL5|TX5/RX5|UART5 |
+|SERIAL6|TX6/RX6|UART6 |
 
 ## RC Input
 
@@ -53,14 +53,20 @@ The correct battery setting parameters are:
  - BATT_MONITOR 4
  - BATT_VOLT_PIN 11
  - BATT_VOLT_MULT 550
- - BATT_CURR_PIN xx
- - BATT_CURR_MULT xx
+ - BATT_CURR_PIN 13
+ - BATT_CURR_MULT 100
 
 These are set by default in the firmware and shouldn't need to be adjusted
 
+## Airspeed
+
+The HAKRCF405Wing has both analog (JST-GH 3 pin) and I2C port (JST-GH 4pin) exposed for the external airspeed sensor. 
+Analog airspeed settings:
+ - AIRSPEED_PIN 15
+
 ## Compass
 
-The HAKRCF405Wing does not have onboard compass.
+The HAKRCF405Wing does not have onboard compass. Compass can be connected on I2C port (JST-GH 4pin)
 
 ## NeoPixel LED
 
