@@ -2,6 +2,9 @@
 
 The HAKRC F405 Wing v1.0 is a flight controller produced by [HAKRC](https://www.hakrc.com/).
 
+![HAKRCF405Wing FC](HAKRCF405Wing-FC.png "HAKRCF405 Wing Flight contorller")
+
+
 ## Features
 
  - MCU: STM32F405RGT6, 168MHz
@@ -15,7 +18,14 @@ The HAKRC F405 Wing v1.0 is a flight controller produced by [HAKRC](https://www.
 
 ## Pinout
 
-![HAKRCF405Wing](harcrcf405wing_v10.jpg "HAKRC F405 Wing pinout")
+Flight controller board
+![HAKRCF405Wing-TOP](HAKRCF405Wing-FCTOP.png "HAKRC F405 Wing pinout, Top")
+![HAKRCF405Wing-BOM](HAKRCF405Wing-FCBottom.png "HAKRC F405 Wing pinout, Bottom")
+
+Power board
+![HAKRCF405Wing-PWR](HAKRCF405Wing-PowerBoard.png "HAKRC F405 Wing pinout, Power board")
+
+
 
 ## UART Mapping
 
