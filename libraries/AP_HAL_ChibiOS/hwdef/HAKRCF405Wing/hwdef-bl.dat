@@ -1,4 +1,4 @@
-# Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
+# Defaults for HaKRCF405Winf v1.0
 # hw definition file for processing by chibios_hwdef.py
 #
 # Board        : HAKRCF405-Wing, v1.0
@@ -37,7 +37,6 @@ PA14 JTCK-SWCLK SWD
 
 # default to all pins low to avoid ESD issues
 DEFAULTGPIO OUTPUT LOW PULLDOWN
-
 
 # Chip select pins
 PC14 FLASH1_CS CS

@@ -2,15 +2,8 @@
 # Created by   : Jani Hirvinen https://github.com/jpkh
 # Version      : v1.0, 13.07.2024
 
-#ARMING_CHECK = 498
-
-#COMPASS_ENABLE = 0
-#COMPASS_USE = 0
-#COMPASS_USE2 = 0
-#COMPASS_USE3 = 0
-
 # Most radios Ch 6 is 3-way swtich. We could use Ch5 as default
-# but in Betaflight that is used for Arm/Disarm motors. 
+# but in Betaflight uses that for Arm/Disarm motors. 
 FLTMODE_CH = 6
 # First flight mode always Stabile (0)
 FLTMODE1 = 0
@@ -23,17 +16,18 @@ FLTMODE6 = 5
 
 # Reverse RC2. Applies to most of the RC Trasmitters. 
 #RC1_REVERSED = 0
-RC2_REVERSED = 1
+#RC2_REVERSED = 1
 #RC4_REVERSED = 0
 
 ###############################################
 # Frame class: fixedwing, no frame type / class
-#FRAME_CLASS = 0
-#FRAME_TYPE = 0
+#FRAME_CLASS = 
+#FRAME_TYPE = 
 
 ###############################################
 # Serial ports 
-# RC Receiver, ELRS 915/2.4Ghz as default on Serial 1 port, that's where the connector is
+# RC Receiver, ELRS 915/2.4Ghz as default on Serial 1 port, that's where the connector is.
+# Can be changed to elsewhere in FC parameters. 
 RC_PROTOCOLS = 512
 SERIAL1_BAUD = 115
 SERIAL1_PROTOCOL = 23

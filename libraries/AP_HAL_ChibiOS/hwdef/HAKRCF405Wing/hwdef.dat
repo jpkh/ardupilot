@@ -1,17 +1,17 @@
-# Defaults for HaKRCF405 and X-Quadcopter / FPVCopter
+# Defaults for HaKRCF405Wing v1.0
 # hw definition file for processing by chibios_hwdef.py
 #
 # Board        : HAKRCF405-Wing, v1.0
 # Created by   : Jani Hirvinen https://github.com/jpkh
 # Version      : v1.0, 01.11.2024
 #
-# thanks to Betaflight for pin information
 
+#######################################
 # Generic details of the board
-# PB3 - LED's on connectors, 4pcs
+# PA8 - LED's on connectors, 4pcs
 # SD-Card holder on FC Board
 # ICM42688 on SPI1
-# BMP280 Baro
+# SPL06 (BMP280) Baro
 # OSD on SPI2
 # SDCard on SPI3
 
@@ -30,10 +30,8 @@ FLASH_SIZE_KB 1024
 
 # bootloader takes first sector
 FLASH_RESERVE_START_KB 48
-#FLASH_RESERVE_START_KB 64
 
 define HAL_STORAGE_SIZE 16384
-#define HAL_STORAGE_SIZE 15360
 
 define STORAGE_FLASH_PAGE 1
 
@@ -76,7 +74,6 @@ define HAL_BUZZER_OFF 0
 
 # SERIAL ports
 SERIAL_ORDER OTG1 USART1 USART2 USART3 UART4 UART5 USART6  
-# NOT FULLY CHECKED
 
 # PA10 IO-debug-console
 PA11 OTG_FS_DM OTG1
@@ -107,7 +104,7 @@ PD2 UART5_RX UART5 NODMA
 PC12 UART5_TX UART5 NODMA
 DEFAULT_SERIAL5_PROTOCOL SerialProtocol_None
 
-# USART6 (RCIN)
+# USART6
 PC7 USART6_RX USART6
 PC6 USART6_TX USART6
 DEFAULT_SERIAL6_PROTOCOL SerialProtocol_None
@@ -124,8 +121,8 @@ PB9 I2C1_SDA I2C1
 
 # Barometic
 # SPL06 on HakRC F405 Multicopter-FC and Wing-FC
-BARO SPL06 I2C:0:0x76      
-BARO BMP280 I2C:0:0x76
+BARO SPL06 I2C:0:0x76    # Mostly used baro sensor
+#BARO BMP280 I2C:0:0x76   # Not usually used but can be on some of the boards.
 
 # Servos
 
