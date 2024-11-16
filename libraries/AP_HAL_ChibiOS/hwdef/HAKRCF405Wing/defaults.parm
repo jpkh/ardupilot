@@ -1,10 +1,11 @@
 # Defaults for HaKRCF405Wing v1.0
 # Created by   : Jani Hirvinen https://github.com/jpkh
-# Version      : v1.0, 13.07.2024
+# Version      : v1.0, 13.11.2024
 
 # Most radios Ch 6 is 3-way swtich. We could use Ch5 as default
 # but in Betaflight uses that for Arm/Disarm motors. 
 FLTMODE_CH = 6
+
 # First flight mode always Stabile (0)
 FLTMODE1 = 0
 

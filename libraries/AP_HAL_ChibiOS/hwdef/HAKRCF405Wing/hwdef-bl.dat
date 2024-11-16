@@ -1,9 +1,9 @@
-# Defaults for HaKRCF405Winf v1.0
+# Defaults for HaKRCF405Winf v1.1
 # hw definition file for processing by chibios_hwdef.py
 #
-# Board        : HAKRCF405-Wing, v1.0
+# Board        : HAKRCF405-Wing, v1.1
 # Created by   : Jani Hirvinen https://github.com/jpkh
-# Version      : v1.0, 01.11.2024
+# Version      : v1.1, 16.11.2024
 
 # MCU class and specific type
 MCU STM32F4xx STM32F405xx
